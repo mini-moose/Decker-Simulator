@@ -1,0 +1,13 @@
+[
+  {
+    "id": "beginners_special",
+    "name": "Beginner's Special",
+    "rating": 1,
+    "attack": 2,
+    "sleaze": 2,
+    "dataProcessing": 3,
+    "firewall": 2,
+    "cost": 0,
+    "description": "This deck has been through a lot. You've built it from nothing but drive and soldered scrapyard junkers."
+  }
+]
