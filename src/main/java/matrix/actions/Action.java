@@ -5,12 +5,15 @@ import main.ActionResult;
 
 import matrix.Host;
 import matrix.MatrixEntity;
+import matrix.AccessState;
 
 import java.util.ArrayList;
 
 public abstract class Action {
   protected ArrayList<String> attackerStats = new ArrayList<>();
   protected ArrayList<StatEntry> defenderStats = new ArrayList<>();
+  protected int attackerBonus = 0;
+  protected int defenderBonus = 0;
 
   public abstract String getName();
   public abstract boolean isIllegal();
@@ -20,8 +23,14 @@ public abstract class Action {
 
   public ActionResult execute(Game game, MatrixEntity attacker, MatrixEntity target) {
 
+    if (!game.hasRequiredAccess(attacker, target, accessRequired())) {
+      AccessState current = game.getAccessState(attacker, target);
+      return new ActionResult(false, 0, 0,
+        "[ERROR] INSUFFICIENT_ACCESS: " + getName() + " requires " + accessRequired() + " access. Current access: " + current);
+    }
+
     ArrayList<String> defenderStats = resolveDefense(game, target);
-    ArrayList<Integer> netHits = game.ContestedRoll(attacker, target, attackerStats, defenderStats);
+    ArrayList<Integer> netHits = game.ContestedRoll(attacker, target, attackerStats, defenderStats, attackerBonus, defenderBonus);
     
     // Assign attacker hits, defender hits, and glitches to variables for easier comparison
     int attackerHits = netHits.get(0);

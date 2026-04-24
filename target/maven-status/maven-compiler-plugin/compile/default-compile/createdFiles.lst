@@ -16,7 +16,9 @@ matrix/actions/Probe.class
 matrix/IC.class
 main/DiceRoller.class
 matrix/actions/StatSource.class
+matrix/actions/BruteForce.class
 data/Stats.class
+matrix/AccessState.class
 matrix/ic/ICEffect.class
 matrix/actions/StatEntry.class
 data/DataLoader.class

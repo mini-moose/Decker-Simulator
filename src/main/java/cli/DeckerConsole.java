@@ -46,6 +46,9 @@ public class DeckerConsole {
         case "backdoor":
           handleBackdoor(cmd);
           break;
+        case "bruteforce":
+          handleBruteForce(cmd);
+          break;
         case "search":
           handleSearch(cmd);
           break;
@@ -148,14 +151,46 @@ public class DeckerConsole {
     }
 
     CheckOS checkOS = new CheckOS();
+    ActionResult result = checkOS.execute(game, player, game.currentHost);
+    System.out.println(result);
+  }
 
-    if (!player.accessLevel.equals(checkOS.accessRequired())){
-      System.out.println("You need to be " + checkOS.accessRequired() + " on this Host to run this command.");
+  private void handleBruteForce(CommandParser cmd){
+    // Usage: probe <hostname or host UP>
+    if (cmd.positionalArgs.isEmpty()){
+      System.out.println("Brute Force your way into a system.");
+      System.out.println("Notes: Major Action, Illegal");
+      System.out.println("Options:");
+      System.out.println("  -a --access <level>  Access level to force (user/admin)");
+      System.out.println("  -r --repeat-attempts 'Repeat command # times or until succeed'");
+      System.out.println("Usage: bruteforce <target>");
+      System.out.println("Example: bruteforce UnirealCorp-DMZ-01 --access admin");
+      System.out.println("Example: bruteforce UnirealCorp-DMZ-01 --access user -r 3 ");
       return;
     }
 
-    ActionResult result = checkOS.execute(game, player, game.currentHost);
-    System.out.println(result);
+    Host target = game.findHost(cmd.positionalArgs.get(1));
+
+    // If the target is not in the list of discoverable hosts, return an errror
+    if (target == null){
+      System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(1) + " is not a host on your network.");
+      System.out.println("Use 'hosts' to list available hosts.");
+      return;
+    }
+
+    int attempts = cmd.getIntOption("r", cmd.getIntOption("repeat", 1));
+
+    String access = cmd.getOption("access", cmd.getOption("a", "user"));
+
+    for (int i=0; i < attempts; i++){
+      if (attempts > 1) System.out.println("Attempt " + (i + 1) + " of " + attempts);
+
+      BruteForce bruteforce = new BruteForce(access);
+      ActionResult result = bruteforce.execute(game, player, target);
+      System.out.println(result);
+
+      if (result.success) break;
+    }
   }
 
   // Search Action
@@ -204,7 +239,7 @@ public class DeckerConsole {
     }
     System.out.println("=== DETECTED HOSTS ON NETWORK ===");
     for (Host host : game.hosts) {
-      if (host.isHidden == false && host.acl.contains(game.currentHost)){
+      if (host.isHidden == false && host.ncl.contains(game.currentHost)){
         System.out.printf("%-20s %s%n", host.name, host.uniProto);
       }
     }

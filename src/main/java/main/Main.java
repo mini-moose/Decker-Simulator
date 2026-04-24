@@ -10,6 +10,7 @@ import data.Deck;
 import matrix.Host;
 import matrix.actions.Probe;
 import matrix.IC;
+import matrix.AccessState;
 
 import matrix.ic.Acid;
 
@@ -30,17 +31,18 @@ public class Main {
     Player player = new Player(startingDeck);
 
     // Creating test Hosts
-    ArrayList<Host> pubNetACL = new ArrayList<Host>();
+    ArrayList<Host> pubNetNCL = new ArrayList<Host>();
 
-    Host pubNet = new Host(1, 1, "PubNet", "Quench your thirst with AfterGlow MAXX, available at a QuikMart near you!", false, pubNetACL);
+    Host pubNet = new Host(1, 1, "PubNet", "Quench your thirst with AfterGlow MAXX, available at a QuikMart near you!", false, pubNetNCL);
+    pubNet.accessControl.put(player, AccessState.ADMIN_LEGAL);
 
     String loginMessage = "Welcome to the PolCorp Matrix Environment\nPlease respect the rules of our network\nOur directory can be found at /PolCorp/Directory/";
     
-    ArrayList<Host> dmzACL = new ArrayList<Host>(Arrays.asList(pubNet));
-    Host dmz = new Host(2, 2, "DMZ", loginMessage, false, dmzACL); // Easy, Defensive Host as "DMZ"
+    ArrayList<Host> dmzNCL = new ArrayList<Host>(Arrays.asList(pubNet));
+    Host dmz = new Host(2, 2, "DMZ", loginMessage, false, dmzNCL); // Easy, Defensive Host as "DMZ"
     
-    ArrayList<Host> securityACL = new ArrayList<Host>(Arrays.asList(dmz));
-    Host security = new Host(4, 1, "SECURITY", loginMessage, true, securityACL); // Tough, Aggressive Host as "Security"
+    ArrayList<Host> securityNCL = new ArrayList<Host>(Arrays.asList(dmz));
+    Host security = new Host(4, 1, "SECURITY", loginMessage, true, securityNCL); // Tough, Aggressive Host as "Security"
     
     Game game = new Game(player);
     game.addHost(pubNet);

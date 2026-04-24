@@ -9,7 +9,7 @@ public class Host extends MatrixEntity {
   public int type;
   public String loginMessage;
 
-  public ArrayList<Host> acl = new ArrayList<>();
+  public ArrayList<Host> ncl = new ArrayList<>();
   public ArrayList<MatrixEntity> entities = new ArrayList<>();
 
   public void addEntity(MatrixEntity entity) {
@@ -24,8 +24,8 @@ public class Host extends MatrixEntity {
     return result;
   }
 
-  public void addToACL(Host host){
-    acl.add(host);
+  public void addToNCL(Host host){
+    ncl.add(host);
   }
 
   // Supports assigning a Spider (enemy corpo Decker) to the Host
@@ -40,7 +40,7 @@ public class Host extends MatrixEntity {
     this.spider = spider;
   }
 
-  public Host(int hostRating, int type, String hostName, String loginMessage, boolean isHidden, ArrayList<Host> acl) {
+  public Host(int hostRating, int type, String hostName, String loginMessage, boolean isHidden, ArrayList<Host> ncl) {
     super(hostRating);
     this.type = type;
     this.name = hostName;
@@ -48,7 +48,7 @@ public class Host extends MatrixEntity {
 
     this.hasBackdoor = false;
     this.isHidden = isHidden;
-    this.acl = acl;
+    this.ncl = ncl;
 
     // Host Type Reference:
     //   - 1: Aggressive) Higher attack attributes

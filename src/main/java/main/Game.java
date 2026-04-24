@@ -9,6 +9,7 @@ import matrix.Host;
 import matrix.IC;
 import matrix.ic.ICEffect;
 import matrix.MatrixEntity;
+import matrix.AccessState;
 
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -79,13 +80,13 @@ public class Game {
   }
 
   private void triggerGameOver(){
-    Thread.sleep(5000);
+    //Thread.sleep(5000);
     System.out.println("=== FOUND YOU, DECKER ===");
-    Thread.sleep(2000);
+    //Thread.sleep(2000);
     System.out.println("[ERROR] FAILURE_CRITICAL: OVERWATCH HAS YOUR LOCATION");
-    Thread.sleep(2000);
+    //Thread.sleep(2000);
     System.out.println("[ERRO./..asdR] [SYSTEM_TAKEOVER_COMPLETE] SAY GOODBYE TO YOUR DECK");
-    Thread.sleep(1000);
+    //Thread.sleep(1000);
     System.out.println("===================================================================");
     missionState = MissionState.JACKED_OUT;
   }
@@ -112,12 +113,58 @@ public class Game {
 
     if (entityType == Host.class){
       for (Host host : hosts){
-        if (host.isHidden && host.acl.contains(currentHost)){
+        if (host.isHidden && host.ncl.contains(currentHost)){
           hidden.add(host);
         }
       }
     }
     return hidden;
+  }
+
+  // Get the Acccess Control List for a given Matrix Entity 
+  public AccessState getAccessState(MatrixEntity attacker, MatrixEntity defender){
+    if (defender.accessControl == null || !defender.accessControl.containsKey(attacker)){
+      return AccessState.OUTSIDER;
+    }
+    return defender.accessControl.get(attacker);
+  }
+
+  public boolean hasRequiredAccess(MatrixEntity attacker, MatrixEntity defender, String requiredAccess){
+    AccessState current = getAccessState(attacker, defender);
+
+    switch (requiredAccess.toLowerCase()) {
+      case "outsider":
+        // Everyone meets outsider requirement
+        return true;
+      case "user":
+        return current == AccessState.USER
+          || current == AccessState.ADMIN_LEGAL
+          || current == AccessState.ADMIN_ILLEGAL;
+      case "admin":
+        return current == AccessState.ADMIN_LEGAL
+          || current == AccessState.ADMIN_ILLEGAL;
+      default:
+          throw new IllegalArgumentException("Unknown access level: " + requiredAccess);
+    }
+  }
+
+  // Handles checking for if a attacker or defender have an Edge against their opponent
+  // If the Attacker's Attack Rating is 4 or higher than the Defender's Defense Rating, they get an Edge, and vice-versa
+  // Since I'm not keen on implementing dice reroll logic or Edge accumulation and all the tracking that comes with that
+  // to the system (yet), I'm keeping this as Edge = +1 bonus dice to roll on the check
+  // Returns int, 0 or 1. 1 = Attacker has Edge; 2 = Defender has Edge. Neither returns 0.
+  public int CalculateEdge(MatrixEntity attacker, MatrixEntity defender){
+    int hasEdge = 0;
+
+    if (attacker.attackRating > defender.defenseRating + 4){
+      hasEdge = 1;
+      return hasEdge;
+    } else if (attacker.attackRating + 4 < defender.defenseRating){
+      hasEdge = 2;
+      return hasEdge;
+    } else {
+      return hasEdge;
+    }
   }
 
   // Handles Contested Roll Logic

@@ -5,7 +5,7 @@ import player.Player;
 import main.Game;
 import main.ActionResult;
 import matrix.MatrixEntity;
-import main.MissionState;
+import matrix.AccessState;
 
 import matrix.Host;
 
@@ -32,22 +32,24 @@ public class Backdoor extends Action {
   public ActionResult applyEffect(Game game, MatrixEntity attacker, MatrixEntity target, int attackerHits, int targetHits) {
     // If the attacker has more hits than the target, the Action succeeds
     int netHits = attackerHits - targetHits;
+
+    Host targetHost = (Host) target;
+
+    if (!targetHost.hasBackdoor){
+      return new ActionResult(false, 0, 0,
+          "No backdoor found on '" + targetHost.name + "'. Did you forget to Probe first?");
+    }
     
     if (netHits > 0) {
-      Host targetHost = (Host) target;
       game.currentHost = targetHost;
       
-      Player player = (Player) attacker;
-      player.accessLevel = "Admin";
-
+      targetHost.accessControl.put(attacker, AccessState.ADMIN_LEGAL);
       return new ActionResult(true, netHits, targetHits,
-          "Backdoor entered. You now have Admin privileges on Host " + targetHost.name + ".");
+          "Backdoor exploited. You now have (Legal) Admin privileges on Host '" + targetHost.name + "'.");
     } else {
-      Host targetHost = (Host) target;
       targetHost.hasBackdoor = false;
-
       return new ActionResult(false, netHits, targetHits,
-          "Backdoor entry failed. Backdoor was discovered and removed.");
+          "Backdoor exploitation failed. Backdoor was discovered and removed from '" + targetHost.name + "'.");
     }
   }
 }

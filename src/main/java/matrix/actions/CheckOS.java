@@ -27,7 +27,7 @@ public class CheckOS extends Action {
 
   @Override
   public ActionResult applyEffect(Game game, MatrixEntity attacker, MatrixEntity target, int attackerHits, int targetHits) {
-    // If the attacker has more hits than the target, the Action succeeds    
+    // If the attacker has more hits than the target, the Action succeeds   
     int netHits = attackerHits - targetHits;
 
     if (netHits > 0) {
