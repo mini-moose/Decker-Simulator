@@ -2,6 +2,7 @@ package matrix;
 
 import matrix.AccessState;
 
+import java.util.Random;
 import java.util.UUID;
 import java.util.HashMap;
 
@@ -24,10 +25,20 @@ public abstract class MatrixEntity {
   public int initiative;
   public int devCondition;
 
+  public int lastSearch = 0;
+  public int searchInterval = 10;
+
   public int isAlive; // 0 for no 1 for yes
 
   public boolean hasBackdoor;
   public boolean isHidden;
+
+  public void rollInitiative(Random random){
+    int roll = random.nextInt(6) + 1
+             + random.nextInt(6) + 1
+             + random.nextInt(6) + 1;
+    this.initiative = (dataProcessing * 2) + roll;
+  }
 
   public MatrixEntity(int rating) {
     this.rating = rating;

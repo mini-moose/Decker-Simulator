@@ -18,13 +18,13 @@ public class Player extends MatrixEntity {
     public Player(Deck startingDeck) {
         super(startingDeck.rating); // sets base matrix attributes
         // Override with deck-specific values
+        this.name = "";
+
         this.devCondition = startingDeck.rating / 2 + 8;
         this.attack = startingDeck.attack;
         this.sleaze = startingDeck.sleaze;
         this.dataProcessing = startingDeck.dataProcessing;
         this.firewall = startingDeck.firewall;
-
-        this.initiative = 10;
 
         this.isAlive = 1;
     }

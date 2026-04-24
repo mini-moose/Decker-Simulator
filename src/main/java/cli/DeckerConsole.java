@@ -4,6 +4,7 @@ import cli.CommandParser;
 
 import main.Game;
 import main.ActionResult;
+import main.TurnManager;
 
 import matrix.Host;
 import matrix.MatrixEntity;
@@ -18,17 +19,35 @@ public class DeckerConsole {
 
   private Game game;
   private Player player;
+  private TurnManager turnManager;
+
   private Scanner console = new Scanner(System.in);
 
   public DeckerConsole(Game game, Player player){
     this.game = game;
     this.player = player;
+    this.turnManager = new TurnManager(game, player);
   }
 
   public void start(){
     printBanner();
+    // Get decker name on first entry
+    String playerName = player.name;
+
+    while (playerName.isEmpty()) {
+      System.out.println("What's your handle, decker?");
+      playerName = console.nextLine().trim();
+      if (playerName.isEmpty()){
+        System.out.println("Trying for incognito huh? Do us both a favor and just pick a name, yea?");
+      } else {
+        player.name = playerName;
+        break;
+      }
+    }
+
     while (true) {
-      System.out.print("decker@matrix:~$ ");
+
+      System.out.print(player.name + "@matrix:~$ ");
       String input = console.nextLine().trim();
 
       if (input.isEmpty()) continue;
@@ -52,6 +71,9 @@ public class DeckerConsole {
         case "search":
           handleSearch(cmd);
           break;
+        case "enterhost":
+          handleEnterHost(cmd);
+          break;
         case "hosts":
           handleHosts();
           break;
@@ -70,6 +92,9 @@ public class DeckerConsole {
     }
   }
 
+  // Attempt to establish a backdoor exploit on the target system
+  // Success: A backdoor exploit is established and can use the backdoor action
+  // Failure: Backdoor exploit not established
   private void handleProbe(CommandParser cmd){
     // Usage: probe <hostname or host UP>
     if (cmd.positionalArgs.isEmpty()){
@@ -83,10 +108,10 @@ public class DeckerConsole {
       return;
     }
 
-    Host target = game.findHost(cmd.positionalArgs.get(1));
+    Host target = game.findHost(cmd.positionalArgs.get(0));
 
     if (target == null){
-      System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(1) + " is not a host on your network.");
+      System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a host on your network.");
       System.out.println("Use 'hosts' to list available hosts.");
       return;
     }
@@ -99,13 +124,16 @@ public class DeckerConsole {
       Probe probe = new Probe();
       ActionResult result = probe.execute(game, player, target);
       System.out.println(result);
+      turnManager.onPlayerActionTaken();
 
-      if (result.success) break;
+      if (result.success) { break; }
     }
   }
 
+  // Exploit a backdoor set by Probe action
+  // Success: Gives attacker Legal Admin access
+  // Failure: Defender finds and removes backdoor
   private void handleBackdoor(CommandParser cmd){
-    // Usage: probe <hostname or host UP>
     if (cmd.positionalArgs.isEmpty()){
       System.out.println("Leverage a Backdoor on the target system.");
       System.out.println("Notes: Major Action, Illegal");
@@ -117,17 +145,17 @@ public class DeckerConsole {
       return;
     }
 
-    Host target = game.findHost(cmd.positionalArgs.get(1));
+    Host target = game.findHost(cmd.positionalArgs.get(0));
 
     // If the target is not in the list of discoverable hosts, return an errror
     if (target == null){
-      System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(1) + " is not a host on your network.");
+      System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a host on your network.");
       System.out.println("Use 'hosts' to list available hosts.");
       return;
     }
 
     if (!target.hasBackdoor){
-      System.out.println("[ERROR] HOST_NO_EXPLOIT: " + cmd.positionalArgs.get(1) + " does not have an established backdoor. Did you forget to Probe first?");
+      System.out.println("[ERROR] HOST_NO_EXPLOIT: " + cmd.positionalArgs.get(0) + " does not have an established backdoor. Did you forget to Probe first?");
       return;
     }
 
@@ -140,10 +168,16 @@ public class DeckerConsole {
       ActionResult result = backdoor.execute(game, player, target);
       System.out.println(result);
 
+      turnManager.onPlayerActionTaken();
+
       if (result.success) break;
     }
   }
 
+
+  // Checks your current Overwatch Score
+  // Success: You find your Overwatch Score
+  // Failure: You are unable to find your Overwatch Score
   private void handleCheckOS(CommandParser cmd){
     if (game.currentHost == null){
       System.out.println("ERROR [HOST_NOT_FOUND]: You are not currently connected to a host");
@@ -153,15 +187,17 @@ public class DeckerConsole {
     CheckOS checkOS = new CheckOS();
     ActionResult result = checkOS.execute(game, player, game.currentHost);
     System.out.println(result);
+
+    turnManager.onPlayerActionTaken();
   }
 
   private void handleBruteForce(CommandParser cmd){
     // Usage: probe <hostname or host UP>
-    if (cmd.positionalArgs.isEmpty()){
+    if (cmd.positionalArgs.size() < 1){
       System.out.println("Brute Force your way into a system.");
       System.out.println("Notes: Major Action, Illegal");
       System.out.println("Options:");
-      System.out.println("  -a --access <level>  Access level to force (user/admin)");
+      System.out.println("  -a --access <level>  Access level to force (user/admin). Defaults to User");
       System.out.println("  -r --repeat-attempts 'Repeat command # times or until succeed'");
       System.out.println("Usage: bruteforce <target>");
       System.out.println("Example: bruteforce UnirealCorp-DMZ-01 --access admin");
@@ -169,11 +205,11 @@ public class DeckerConsole {
       return;
     }
 
-    Host target = game.findHost(cmd.positionalArgs.get(1));
+    Host target = game.findHost(cmd.positionalArgs.get(0));
 
     // If the target is not in the list of discoverable hosts, return an errror
     if (target == null){
-      System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(1) + " is not a host on your network.");
+      System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a host on your network.");
       System.out.println("Use 'hosts' to list available hosts.");
       return;
     }
@@ -189,12 +225,17 @@ public class DeckerConsole {
       ActionResult result = bruteforce.execute(game, player, target);
       System.out.println(result);
 
+      turnManager.onPlayerActionTaken();
+
       if (result.success) break;
     }
   }
 
   // Search Action
   // Requires: MatrixEntity type (host, file, device, icon)
+  // Search for a hidden system on or connected to your current Host
+  // Success: You discover the system you were looking for
+  // Failure: You do not discover the system you were looking for
   private void handleSearch(CommandParser cmd){
     if (cmd.positionalArgs.isEmpty()) {
       System.out.println("Search your current Host for Programs that are in Run Silent mode.");
@@ -205,7 +246,7 @@ public class DeckerConsole {
       return;
     }
 
-    String entityType = cmd.positionalArgs.get(1);
+    String entityType = cmd.positionalArgs.get(0);
 
     Class<?> targetClass = resolveEntityType(entityType);
     if (targetClass == null){
@@ -228,6 +269,33 @@ public class DeckerConsole {
       ActionResult result = search.execute(game, player, target);
       System.out.println(result);
     }
+
+    turnManager.onPlayerActionTaken();
+  }
+
+  private void handleEnterHost(CommandParser cmd){
+    // Usage: probe <hostname or host UP>
+    if (cmd.positionalArgs.isEmpty()){
+      System.out.println("Enter a Host you have access to");
+      System.out.println("Notes: Simple Action, Legal");
+      System.out.println("Usage: enter-host <target>");
+      System.out.println("Example: enter-host UnirealCorp-DMZ-01");
+      System.out.println("Example: enter-host UnirealCorp-DMZ-01 -r 3");
+      return;
+    }
+
+    Host target = game.findHost(cmd.positionalArgs.get(0));
+
+    if (target == null){
+      System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a host on your network.");
+      System.out.println("Use 'hosts' to list available hosts.");
+      return;
+    }
+
+    EnterHost enterHost = new EnterHost();
+    ActionResult result = enterHost.execute(game, player, target);
+    System.out.println(result);
+    turnManager.onPlayerActionTaken();
   }
 
   private void handleHosts() {
@@ -250,6 +318,7 @@ public class DeckerConsole {
     System.out.println("=== DECKER STATUS ===");
     System.out.println("FIREWALL:          " + player.firewall);
     System.out.println("ATTACK:            " + player.attack);
+    System.out.println("INITIATIVE:        " + player.initiative);
     System.out.println("CONDITION:         " + player.conditionMonitor);
     System.out.println("MISSION_STATUS:    " + game.getMissionState());
     System.out.println("=====================");

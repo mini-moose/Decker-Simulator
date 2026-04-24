@@ -11,9 +11,11 @@ import matrix.ic.ICEffect;
 import matrix.MatrixEntity;
 import matrix.AccessState;
 
+import java.util.Random;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 // Manages the game logic
 public class Game {
@@ -24,10 +26,13 @@ public class Game {
 
   public Player player;
   public int overWatchScore = 0;
+  public int gameClock = 0;
 
+  public Host parentHost = null;
   public Host currentHost = null;
 
   public ArrayList<Host> hosts = new ArrayList<Host>();
+
   public HashMap<Host, ArrayList<IC>> hostIC = new HashMap<>();
 
   private static final int OVERWATCH_LIMIT = 40;
@@ -70,6 +75,7 @@ public class Game {
     return null;
   }
 
+  // Update the Overwatch Score with the defender's hits
   public void updateOverwatch(int defenderHits){
     if (defenderHits > 0) {
       overWatchScore += defenderHits;
@@ -91,6 +97,7 @@ public class Game {
     missionState = MissionState.JACKED_OUT;
   }
 
+  // Remove these, we aren't using Mission State to track mission progress anymore
   public void setMissionState(MissionState state){
     this.missionState = state;
     System.out.println(">> INFO [MISSION STATE]: " + state);
@@ -100,6 +107,7 @@ public class Game {
     return this.missionState;
   }
 
+  // Get an ArrayList of MatrixEntities on or connected to the current Host with isHidden set to true
   public ArrayList<MatrixEntity> findHiddenEntities(Class<?> entityType) {
     ArrayList<MatrixEntity> hidden = new ArrayList<>();
     
@@ -121,6 +129,33 @@ public class Game {
     return hidden;
   }
 
+  // Return all Matrix Entities of Type Spider, Player, and IC
+  // Needed to establish turn order
+  public ArrayList<MatrixEntity> getActiveEntities(){
+    ArrayList<MatrixEntity> active = new ArrayList<>();
+
+    if (currentHost == null) return active;
+
+    // Player is always added
+    active.add(player);
+
+    // Add the Spider if they're in the Host
+    if (currentHost.hasSpider()){
+      active.add(currentHost.spider);
+    }
+
+    // Add all ICs in the current Host
+    ArrayList<IC> ics = getHostIC(currentHost);
+    if (ics != null) active.addAll(ics);
+
+    // Future support for Agents deployed by the Spider
+    //ArrayList<Agent> agents = getHostAgents(currentHost);
+    //if (agents != null) active.addAll(agents);
+
+    return active;
+  }
+
+
   // Get the Acccess Control List for a given Matrix Entity 
   public AccessState getAccessState(MatrixEntity attacker, MatrixEntity defender){
     if (defender.accessControl == null || !defender.accessControl.containsKey(attacker)){
@@ -129,24 +164,17 @@ public class Game {
     return defender.accessControl.get(attacker);
   }
 
-  public boolean hasRequiredAccess(MatrixEntity attacker, MatrixEntity defender, String requiredAccess){
-    AccessState current = getAccessState(attacker, defender);
 
-    switch (requiredAccess.toLowerCase()) {
-      case "outsider":
-        // Everyone meets outsider requirement
-        return true;
-      case "user":
-        return current == AccessState.USER
-          || current == AccessState.ADMIN_LEGAL
-          || current == AccessState.ADMIN_ILLEGAL;
-      case "admin":
-        return current == AccessState.ADMIN_LEGAL
-          || current == AccessState.ADMIN_ILLEGAL;
-      default:
-          throw new IllegalArgumentException("Unknown access level: " + requiredAccess);
-    }
+  // Check if the attacker entity has the required access to perform an action on the defender entity
+  public boolean hasRequiredAccess(MatrixEntity attacker, MatrixEntity defender, AccessState required){
+    AccessState current = getAccessState(attacker, defender);
+    return current.supersedes(required);
   }
+
+  // ################################################################################
+  // ##################        Dice and Rolling Methods        ######################
+  // ################################################################################
+
 
   // Handles checking for if a attacker or defender have an Edge against their opponent
   // If the Attacker's Attack Rating is 4 or higher than the Defender's Defense Rating, they get an Edge, and vice-versa
@@ -201,7 +229,6 @@ public class Game {
 
   // IC Attacks trigger certain effects on hit depending on the type of IC
   // This means it needs it's own Roll method rather than piggybacking off of the generic Contested Roll
-
   public void ResolveICAttack(IC ic, Player player){
     // IC attacks with its attack pool
     int icDice = roller.GrabDice(ic, new ArrayList<>(Arrays.asList("attack")));
@@ -257,4 +284,32 @@ public class Game {
 
     return hitList;
   }
+
+  // ################################################################################
+  // #################        Game State and Flow Methods       #####################
+  // ################################################################################
+  
+  // Start Game Clock
+  // Each Action = 6 seconds (technically 3 seconds in the sourcebook but that's really restrictive)
+
+  // Establish a turn cycle and roll initiative
+  public ArrayList<MatrixEntity> getTurnOrder(){
+    ArrayList<MatrixEntity> activeEntities = getActiveEntities();
+    Random random = new Random();
+    
+    for (MatrixEntity entity : activeEntities){
+      if (entity.initiative == 0){
+        entity.rollInitiative(random);
+        System.out.println(entity.name + " initiative: ");
+      } else {
+        System.out.println(entity.name + " initiative: ");
+      }
+
+    }
+    activeEntities.sort((a, b) -> b.initiative - a.initiative);
+
+    return activeEntities;
+  }
+
+
 }

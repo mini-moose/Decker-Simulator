@@ -7,6 +7,9 @@ import java.util.ArrayList;
 public class Host extends MatrixEntity {
 
   public int type;
+
+  public boolean isAlert = false;
+
   public String loginMessage;
 
   public ArrayList<Host> ncl = new ArrayList<>();

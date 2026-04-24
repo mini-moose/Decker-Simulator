@@ -20,13 +20,19 @@ public class Backdoor extends Action {
   }
 
   @Override
+  public String getType() {return "Major"; }
+
+  @Override
   public String getName() { return "Back Door"; }
 
   @Override
   public boolean isIllegal() { return true; }
 
   @Override
-  public String accessRequired() { return "Outsider"; }
+  public boolean isContested() { return true; }
+
+  @Override
+  public AccessState accessRequired() { return AccessState.OUTSIDER; }
 
   @Override
   public ActionResult applyEffect(Game game, MatrixEntity attacker, MatrixEntity target, int attackerHits, int targetHits) {
@@ -41,8 +47,6 @@ public class Backdoor extends Action {
     }
     
     if (netHits > 0) {
-      game.currentHost = targetHost;
-      
       targetHost.accessControl.put(attacker, AccessState.ADMIN_LEGAL);
       return new ActionResult(true, netHits, targetHits,
           "Backdoor exploited. You now have (Legal) Admin privileges on Host '" + targetHost.name + "'.");

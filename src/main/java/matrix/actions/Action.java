@@ -15,9 +15,13 @@ public abstract class Action {
   protected int attackerBonus = 0;
   protected int defenderBonus = 0;
 
+  public abstract String getType();
   public abstract String getName();
+
   public abstract boolean isIllegal();
-  public abstract String accessRequired();
+  public abstract boolean isContested();
+
+  public abstract AccessState accessRequired();
 
   public abstract ActionResult applyEffect(Game game, MatrixEntity attacker, MatrixEntity target, int attackerHits, int targetHits);
 
@@ -29,6 +33,10 @@ public abstract class Action {
         "[ERROR] INSUFFICIENT_ACCESS: " + getName() + " requires " + accessRequired() + " access. Current access: " + current);
     }
 
+    if (!isContested()) {
+      return applyEffect(game, attacker, target, 0, 0);
+    }
+
     ArrayList<String> defenderStats = resolveDefense(game, target);
     ArrayList<Integer> netHits = game.ContestedRoll(attacker, target, attackerStats, defenderStats, attackerBonus, defenderBonus);
     
@@ -38,7 +46,7 @@ public abstract class Action {
 
     // Illegal actions generate overwatch on target hits
     
-    if (isIllegal()) {
+    if (isIllegal() && targetHits > 0) {
       if (targetHits > 0){
         game.updateOverwatch(targetHits);
       }

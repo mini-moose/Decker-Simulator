@@ -19,6 +19,12 @@ public class DiceRoller{
       dicePool += entity.getStat(stat);
     }
 
+    if (entity.isHidden){
+      System.out.println(">> Grabbed " + dicePool + " dice for [NAME_REDACTED].");
+    } else {
+      System.out.println(">> Grabbed " + dicePool + " dice for " + entity.name + ".");
+    }
+
     return dicePool;
   }
 
@@ -26,10 +32,20 @@ public class DiceRoller{
   public static ArrayList<Integer> RollDice(int dicePool) {
     ArrayList<Integer> results = new ArrayList<>();
 
+    System.out.print("Roll Results: ");
     for (int i=0; i < dicePool; i++) {
-      results.add(random.nextInt(6) + 1);
+      int roll = random.nextInt(6) + 1;
+      results.add(roll);
+      System.out.print(roll + " ");
+      // Rolling every .25 seconds to add dramatic suspense
+      try {
+        Thread.sleep(400);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
     }
 
+    System.out.print("\n");
     return results;
   }
 

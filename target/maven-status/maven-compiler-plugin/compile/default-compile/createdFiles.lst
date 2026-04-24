@@ -1,12 +1,15 @@
+matrix/ic/Patrol.class
 matrix/MatrixEntity.class
 data/Deck.class
 player/Player.class
+main/TurnManager.class
 main/ActionResult.class
 cli/DeckerConsole.class
 main/Main.class
 matrix/actions/Search.class
 main/MissionState.class
 cli/CommandParser.class
+matrix/actions/EnterHost.class
 main/Game.class
 matrix/actions/Action.class
 matrix/Host.class
@@ -25,3 +28,4 @@ data/DataLoader.class
 data/DataLoader$1.class
 matrix/actions/CheckOS.class
 matrix/ic/Acid.class
+matrix/AccessState$1.class

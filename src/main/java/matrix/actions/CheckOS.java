@@ -3,7 +3,7 @@ package matrix.actions;
 import main.Game;
 import main.ActionResult;
 import matrix.MatrixEntity;
-import main.MissionState;
+import matrix.AccessState;
 
 import matrix.Host;
 
@@ -17,13 +17,19 @@ public class CheckOS extends Action {
   }
 
   @Override
+  public String getType() { return "Major"; }
+
+  @Override
   public String getName() { return "Check Overwatch Score"; }
 
   @Override
   public boolean isIllegal() { return true; }
 
   @Override
-  public String accessRequired() { return "Admin"; }
+  public boolean isContested() { return true; }
+
+  @Override
+  public AccessState accessRequired() { return AccessState.ADMIN_LEGAL; }
 
   @Override
   public ActionResult applyEffect(Game game, MatrixEntity attacker, MatrixEntity target, int attackerHits, int targetHits) {

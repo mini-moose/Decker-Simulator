@@ -13,7 +13,7 @@ public class CommandParser {
     CommandParser result = new CommandParser();
     result.command = parts[0].toLowerCase();
 
-    for (int i=0; i < parts.length; i++) {
+    for (int i=1; i < parts.length; i++) {
       String part = parts[i];
 
       if (part.startsWith("--")){

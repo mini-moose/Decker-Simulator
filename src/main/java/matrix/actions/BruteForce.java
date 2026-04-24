@@ -4,12 +4,14 @@ import player.Player;
 
 import main.Game;
 import main.ActionResult;
-import matrix.MatrixEntity;
 import main.MissionState;
 
 import matrix.Host;
+import matrix.AccessState;
+import matrix.MatrixEntity;
 
 import java.util.Arrays;
+import java.util.HashMap;
 
 
 // Brute Force
@@ -20,9 +22,10 @@ import java.util.Arrays;
 // Admin access gained by this skill is Illegal access and will build Overwatch Level passively
 public class BruteForce extends Action {
 
-  private String requestedAccess; // User or Admin
+  private String requestedAccess;
 
   public BruteForce(String requestedAccess) {
+    this.requestedAccess = requestedAccess;
     attackerStats.addAll(Arrays.asList("cracking", "logic"));
     defenderStats.add(StatEntry.spider("willpower"));
     defenderStats.add(StatEntry.host("firewall"));
@@ -33,13 +36,19 @@ public class BruteForce extends Action {
   }
 
   @Override
+  public String getType() {return "Major"; }
+
+  @Override
   public String getName() { return "Brute Force"; }
 
   @Override
   public boolean isIllegal() { return true; }
 
   @Override
-  public String accessRequired() { return "Outsider"; }
+  public boolean isContested() { return true; }
+
+  @Override
+  public AccessState accessRequired() { return AccessState.OUTSIDER; }
 
   @Override
   public ActionResult applyEffect(Game game, MatrixEntity attacker, MatrixEntity target, int attackerHits, int targetHits) {
@@ -48,14 +57,17 @@ public class BruteForce extends Action {
     
     if (netHits > 0) {
       // If the Action succeeds, set host.hasBackdoor = true
-      Host defenderEntity = (Host) target; // Need to make this MatrixEntity agnostic so player can get into anything
-      game.currentHost = defenderEntity;
-
+      Host targetHost = (Host) target;
       Player attackerEntity = (Player) attacker;
-      attackerEntity.accessLevel = requestedAccess;
+
+      if (requestedAccess.equalsIgnoreCase("User")){
+        targetHost.accessControl.put(attacker, AccessState.USER);
+      } else if (requestedAccess.equalsIgnoreCase("Admin")){
+        targetHost.accessControl.put(attacker, AccessState.ADMIN_ILLEGAL);
+      }
 
       return new ActionResult(true, netHits, targetHits,
-          "Brute Force successful, (Illegal) Admin access gained on '" + defenderEntity.name + "'.");
+          "Brute Force successful, (Illegal) " + requestedAccess + " access gained on '" + targetHost.name + "'.");
     } else {
       return new ActionResult(false, netHits, targetHits,
           "Search found no hidden Matrix Entities.");

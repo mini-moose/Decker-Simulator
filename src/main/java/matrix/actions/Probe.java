@@ -5,7 +5,7 @@ import player.Player;
 import main.Game;
 import main.ActionResult;
 import matrix.MatrixEntity;
-import main.MissionState;
+import matrix.AccessState;
 
 import matrix.Host;
 
@@ -20,13 +20,19 @@ public class Probe extends Action {
   }
 
   @Override
+  public String getType() {return "Major"; }
+
+  @Override
   public String getName() { return "Probe"; }
 
   @Override
   public boolean isIllegal() { return true; }
 
   @Override
-  public String accessRequired() { return "Outsider"; }
+  public boolean isContested() { return true; }
+
+  @Override
+  public AccessState accessRequired() { return AccessState.OUTSIDER; }
 
   @Override
   public ActionResult applyEffect(Game game, MatrixEntity attacker, MatrixEntity target, int attackerHits, int targetHits) {
