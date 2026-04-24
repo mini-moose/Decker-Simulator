@@ -71,8 +71,11 @@ public class DeckerConsole {
         case "search":
           handleSearch(cmd);
           break;
-        case "enterhost":
+        case "enter-host":
           handleEnterHost(cmd);
+          break;
+        case "exit-host":
+          handleExitHost(cmd);
           break;
         case "hosts":
           handleHosts();
@@ -274,7 +277,6 @@ public class DeckerConsole {
   }
 
   private void handleEnterHost(CommandParser cmd){
-    // Usage: probe <hostname or host UP>
     if (cmd.positionalArgs.isEmpty()){
       System.out.println("Enter a Host you have access to");
       System.out.println("Notes: Simple Action, Legal");
@@ -294,6 +296,30 @@ public class DeckerConsole {
 
     EnterHost enterHost = new EnterHost();
     ActionResult result = enterHost.execute(game, player, target);
+    System.out.println(result);
+    turnManager.onPlayerActionTaken();
+  }
+
+  private void handleExitHost(CommandParser cmd){
+    if (cmd.positionalArgs.isEmpty()){
+      System.out.println("Exit from your current host to your previous host");
+      System.out.println("Notes: Simple Action, Legal");
+      System.out.println("Usage: exit-host <target>");
+      System.out.println("Example: exit-host UnirealCorp-DMZ-01");
+      System.out.println("Example: exit-host UnirealCorp-DMZ-01 -r 3");
+      return;
+    }
+
+    Host target = game.findHost(cmd.positionalArgs.get(0));
+
+    if (target == null){
+      System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a host on your network.");
+      System.out.println("Use 'hosts' to list available hosts.");
+      return;
+    }
+
+    ExitHost exitHost = new ExitHost();
+    ActionResult result = exitHost.execute(game, player, target);
     System.out.println(result);
     turnManager.onPlayerActionTaken();
   }
@@ -326,12 +352,16 @@ public class DeckerConsole {
 
   private void handleHelp(){
     System.out.println("=== AVAILABLE COMMANDS ===");
-    System.out.println("probe <target>      - Probe a host for vulnerabilities ['ILLEGAL' ;) ]");
-    System.out.println("backdoor <target>   - Probe a host for vulnerabilities ['ILLEGAL' ;) ]");
-    System.out.println("checkos             - Check your OverWatch score ['ILLEGAL' ;) ]");
-    System.out.println("hosts               - List all unhidden hosts on the network");
-    System.out.println("status              - Display the status of your deck");
-    System.out.println("exit                - Jack out of the matrix");
+    System.out.println("probe <target>             - Probe a host for vulnerabilities ['ILLEGAL' ;) ]");
+    System.out.println("backdoor <target>          - Probe a host for vulnerabilities ['ILLEGAL' ;) ]");
+    System.out.println("bruteforce <target>        - Break in to a host directly. Can grant Admin or User access ['Illegal' ;) ]");
+    System.out.println("checkos                    - Check your OverWatch score ['ILLEGAL' ;) ]");
+    System.out.println("search <host/device/file>  - Search for a hidden entity of a specific type.");
+    System.out.println("enter-host <target>        - Enter the target host. Must have the right access first.");
+    System.out.println("exit-host                  - Exit your current host to the previous host.");
+    System.out.println("hosts                      - List all unhidden hosts on the network");
+    System.out.println("status                     - Display the status of your deck");
+    System.out.println("exit                       - Jack out of the matrix");
     System.out.println("==========================");
   }
 

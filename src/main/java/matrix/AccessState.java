@@ -14,11 +14,9 @@ public enum AccessState {
         return this == USER
             || this == ADMIN_LEGAL
             || this == ADMIN_ILLEGAL;
-      case ADMIN_ILLEGAL:
+      case ADMIN_LEGAL:
         return this == ADMIN_ILLEGAL
             || this == ADMIN_LEGAL;
-      case ADMIN_LEGAL:
-        return this == ADMIN_LEGAL;
       default:
         throw new IllegalArgumentException("Unknown access state: " + required);
     }

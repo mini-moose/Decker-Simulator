@@ -8,11 +8,9 @@ import data.DataLoader;
 import data.Deck;
 
 import matrix.Host;
-import matrix.actions.Probe;
 import matrix.IC;
+import matrix.ic.*;
 import matrix.AccessState;
-
-import matrix.ic.Acid;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -51,11 +49,11 @@ public class Main {
 
     game.currentHost = pubNet;
 
+    Patrol patrol = new Patrol(dmz);
+
     Acid acidIC = new Acid(security);
 
     game.addIC(security, acidIC);
-
-    ArrayList<IC> securityICs = game.getHostIC(security);
 
     DeckerConsole console = new DeckerConsole(game, player);
     console.start();
