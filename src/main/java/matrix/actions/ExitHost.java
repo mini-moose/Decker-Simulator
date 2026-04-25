@@ -36,11 +36,11 @@ public class ExitHost extends Action {
   public ActionResult applyEffect(Game game, MatrixEntity attacker, MatrixEntity defender, int attackerHits, int targetHits){
     Host targetHost = (Host) defender;
 
-    game.currentHost = game.parentHost;
+    game.currentHost = targetHost;
     game.parentHost = null;
 
     return new ActionResult(true, 0, 0,
-      "[INFO] HOST_STATE: Exited Host " + targetHost.name + ".");
+      "[INFO] HOST_STATE: Exited to Host " + defender.name + ".");
   }
 
 }

@@ -48,6 +48,7 @@ public class Main {
     game.addHost(security);
 
     game.currentHost = pubNet;
+    game.defaultHost = pubNet;
 
     Patrol patrol = new Patrol(dmz);
 

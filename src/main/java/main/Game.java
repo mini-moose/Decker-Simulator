@@ -28,6 +28,7 @@ public class Game {
   public int overWatchScore = 0;
   public int gameClock = 0;
 
+  public Host defaultHost = null;
   public Host parentHost = null;
   public Host currentHost = null;
 

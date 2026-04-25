@@ -277,7 +277,7 @@ public class DeckerConsole {
   }
 
   private void handleEnterHost(CommandParser cmd){
-    if (cmd.positionalArgs.isEmpty()){
+    if (cmd.positionalArgs.get(0).equalsIgnoreCase("help")){
       System.out.println("Enter a Host you have access to");
       System.out.println("Notes: Simple Action, Legal");
       System.out.println("Usage: enter-host <target>");
@@ -301,26 +301,24 @@ public class DeckerConsole {
   }
 
   private void handleExitHost(CommandParser cmd){
-    if (cmd.positionalArgs.isEmpty()){
+    if (cmd.positionalArgs.get(0).equalsIgnoreCase("help")){
       System.out.println("Exit from your current host to your previous host");
       System.out.println("Notes: Simple Action, Legal");
-      System.out.println("Usage: exit-host <target>");
-      System.out.println("Example: exit-host UnirealCorp-DMZ-01");
-      System.out.println("Example: exit-host UnirealCorp-DMZ-01 -r 3");
-      return;
-    }
-
-    Host target = game.findHost(cmd.positionalArgs.get(0));
-
-    if (target == null){
-      System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a host on your network.");
-      System.out.println("Use 'hosts' to list available hosts.");
+      System.out.println("Usage: exit-host");
+      System.out.println("");
+      System.out.println("Example: exit-host");
+      System.out.println("Example: exit-host --default");
       return;
     }
 
     ExitHost exitHost = new ExitHost();
-    ActionResult result = exitHost.execute(game, player, target);
-    System.out.println(result);
+    if (cmd.getOption("default", cmd.getOption("d", null)).isEmpty()){
+      ActionResult result = exitHost.execute(game, player, game.defaultHost);
+      System.out.println(result);
+    } else {
+      ActionResult result = exitHost.execute(game, player, game.currentHost);
+      System.out.println(result);
+    }
     turnManager.onPlayerActionTaken();
   }
 
