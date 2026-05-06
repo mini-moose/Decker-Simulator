@@ -1,15 +1,16 @@
 package matrix.ic;
 
-import matrix.IC;
-import matrix.Host;
-import player.Player;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import matrix.Host;
+import player.Player;
+
 public class Acid extends IC implements ICEffect{
   public Acid(Host host){
-    super(host, "Acid");
+    super(host, ICType.ACID);
+    this.description = "Specialized Attack IC that lowers target's Firewall on hit.";
+
     // Assign player defense stats for attacks from this IC per player guide
     this.playerDefenseStats = new ArrayList<>(Arrays.asList("willpower", "firewall"));
   }
@@ -25,5 +26,4 @@ public class Acid extends IC implements ICEffect{
   public String getEffectDescription(){
     return "Your Firewall took damage";
   }
-
 }

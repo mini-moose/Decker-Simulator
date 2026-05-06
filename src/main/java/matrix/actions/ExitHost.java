@@ -1,13 +1,13 @@
 package matrix.actions;
 
+import game.ActionResult;
+import game.Game;
+
 import player.Player;
 
 import matrix.MatrixEntity;
 import matrix.AccessState;
 import matrix.Host;
-
-import main.Game;
-import main.ActionResult;
 
 // Enter Host
 // Broken out actions between Exit Host and Enter Host

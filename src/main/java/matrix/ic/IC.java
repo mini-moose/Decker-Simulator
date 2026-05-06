@@ -1,20 +1,22 @@
-package matrix;
-
-import matrix.MatrixEntity;
-import matrix.Host;
-import player.Player;
+package matrix.ic;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+
+import matrix.Host;
+import matrix.MatrixEntity;
 
 public class IC extends MatrixEntity {
+  public String description;
+  
   public int attackRating;
-  public String icType;
 
-  public ArrayList<String> playerDefenseStats = new ArrayList<String>();
+  public ICType icType;
 
-  public IC(Host host, String icType) {
+  public ArrayList<String> playerDefenseStats = new ArrayList<>();
+
+  public IC(Host host, ICType icType) {
     super(host.rating);
+    this.name = icType.toString();
     this.icType = icType;
 
     this.attack = host.rating * 2;

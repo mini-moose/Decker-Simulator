@@ -1,26 +1,26 @@
 package matrix.actions;
 
-import player.Player;
+import game.ActionResult;
+import game.Game;
 
-import main.Game;
-import main.ActionResult;
 import matrix.MatrixEntity;
 import matrix.AccessState;
-
 import matrix.Host;
+
+import player.Player;
 
 import java.util.Arrays;
 
 public class Probe extends Action {
 
   public Probe() {
-    attackerStats.addAll(Arrays.asList("cracking", "logic"));
+    attackerStats.addAll(Arrays.asList("attack", "sleaze"));
     defenderStats.add(StatEntry.spider("willpower"));
     defenderStats.add(StatEntry.host("firewall"));
   }
 
   @Override
-  public String getType() {return "Major"; }
+  public String getType() {return "Extended"; }
 
   @Override
   public String getName() { return "Probe"; }

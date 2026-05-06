@@ -1,6 +1,8 @@
 package enemy;
 
 import data.Deck;
+import data.Cyberjack;
+
 import player.Player;
 
 import java.util.ArrayList;
@@ -14,8 +16,8 @@ public class Spider extends Player {
     return "I'm coming for you, decker!";
   }
 
-  public Spider(String handle, Deck deck){
-    super(deck);
+  public Spider(String handle, Deck deck, Cyberjack cyberjack){
+    super(deck, cyberjack);
     this.handle = handle;
   }
 }

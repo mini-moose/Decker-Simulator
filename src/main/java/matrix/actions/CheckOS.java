@@ -1,10 +1,10 @@
 package matrix.actions;
 
-import main.Game;
-import main.ActionResult;
+import game.ActionResult;
+import game.Game;
+
 import matrix.MatrixEntity;
 import matrix.AccessState;
-
 import matrix.Host;
 
 import java.util.Arrays;
@@ -12,7 +12,7 @@ import java.util.Arrays;
 public class CheckOS extends Action {
 
   public CheckOS() {
-    attackerStats.addAll(Arrays.asList("cracking", "logic"));
+    attackerStats.addAll(Arrays.asList("sleaze", "dataProcessing"));
     defenderStats.add(StatEntry.host("firewall"));
   }
 

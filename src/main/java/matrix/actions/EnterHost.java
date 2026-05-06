@@ -1,13 +1,11 @@
 package matrix.actions;
 
-import player.Player;
-
-import matrix.MatrixEntity;
+import game.ActionResult;
+import game.Game;
 import matrix.AccessState;
 import matrix.Host;
-
-import main.Game;
-import main.ActionResult;
+import matrix.MatrixEntity;
+import mission.ObjectiveType;
 
 // Enter Host
 // Broken out actions between Exit Host and Enter Host
@@ -38,6 +36,8 @@ public class EnterHost extends Action {
 
     game.parentHost = game.currentHost;
     game.currentHost = targetHost;
+
+    game.checkObjectiveComplete(ObjectiveType.GAIN_ACCESS, targetHost);
 
     return new ActionResult(true, 0, 0,
       "[INFO] HOST_STATE: Entered Host " + targetHost.name + ".");

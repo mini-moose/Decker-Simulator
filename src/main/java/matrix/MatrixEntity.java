@@ -1,10 +1,8 @@
 package matrix;
 
-import matrix.AccessState;
-
+import java.util.HashMap;
 import java.util.Random;
 import java.util.UUID;
-import java.util.HashMap;
 
 public abstract class MatrixEntity {
 
@@ -67,5 +65,4 @@ public abstract class MatrixEntity {
       default: throw new IllegalArgumentException("Unknown stat: " + statName);
     }
   }
-
 }

@@ -1,14 +1,15 @@
 package matrix.actions;
 
-import player.Player;
-
-import main.Game;
-import main.ActionResult;
-import main.MissionState;
+import game.ActionResult;
+import game.Game;
 
 import matrix.Host;
 import matrix.AccessState;
 import matrix.MatrixEntity;
+
+import mission.ObjectiveType;
+
+import player.Player;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,11 +27,11 @@ public class BruteForce extends Action {
 
   public BruteForce(String requestedAccess) {
     this.requestedAccess = requestedAccess;
-    attackerStats.addAll(Arrays.asList("cracking", "logic"));
+    attackerStats.addAll(Arrays.asList("attack", "attack"));
     defenderStats.add(StatEntry.spider("willpower"));
     defenderStats.add(StatEntry.host("firewall"));
   
-    if (requestedAccess.equalsIgnoreCase("Admin")){
+    if (requestedAccess.equalsIgnoreCase("admin")){
       defenderBonus = 2;
     }
   }
@@ -56,9 +57,12 @@ public class BruteForce extends Action {
     int netHits = attackerHits - targetHits;
     
     if (netHits > 0) {
-      // If the Action succeeds, set host.hasBackdoor = true
+      // If the action succeeds, give requested access to attacker on the Host
       Host targetHost = (Host) target;
       Player attackerEntity = (Player) attacker;
+
+      // Bruteforce always alerts the target Host
+      targetHost.isAlert = true;
 
       if (requestedAccess.equalsIgnoreCase("User")){
         targetHost.accessControl.put(attacker, AccessState.USER);
@@ -66,11 +70,13 @@ public class BruteForce extends Action {
         targetHost.accessControl.put(attacker, AccessState.ADMIN_ILLEGAL);
       }
 
+      // Can fulfil the GAIN_ACCESS objective on success
+
       return new ActionResult(true, netHits, targetHits,
-          "Brute Force successful, (Illegal) " + requestedAccess + " access gained on '" + targetHost.name + "'.");
+          "Brute Force successful, (Illegal) " + requestedAccess + " access gained on '" + targetHost.name + "'.\n[WARNING] HOST ALERTED TO INTRUSION, DEPLOYING COUNTERMEASURES.");
     } else {
       return new ActionResult(false, netHits, targetHits,
-          "Search found no hidden Matrix Entities.");
+          "Brute Force unsuccessful.");
     }
   }
 }

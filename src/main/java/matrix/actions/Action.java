@@ -1,7 +1,10 @@
 package matrix.actions;
 
-import main.Game;
-import main.ActionResult;
+import game.Game;
+import game.ActionResult;
+
+import main.Debug;
+import main.DiceRoller;
 
 import matrix.Host;
 import matrix.MatrixEntity;
@@ -25,6 +28,8 @@ public abstract class Action {
 
   public abstract ActionResult applyEffect(Game game, MatrixEntity attacker, MatrixEntity target, int attackerHits, int targetHits);
 
+  public DiceRoller roller = new DiceRoller();
+
   public ActionResult execute(Game game, MatrixEntity attacker, MatrixEntity target) {
 
     if (!game.hasRequiredAccess(attacker, target, accessRequired())) {
@@ -37,8 +42,10 @@ public abstract class Action {
       return applyEffect(game, attacker, target, 0, 0);
     }
 
-    ArrayList<String> defenderStats = resolveDefense(game, target);
-    ArrayList<Integer> netHits = game.ContestedRoll(attacker, target, attackerStats, defenderStats, attackerBonus, defenderBonus);
+    int attackerPool = roller.GrabDice(attacker, attackerStats) + attackerBonus;
+
+    int defenderPool = resolveDefense(game, target);
+    ArrayList<Integer> netHits = game.ContestedRoll(attacker, target, attackerPool, defenderPool);
     
     // Assign attacker hits, defender hits, and glitches to variables for easier comparison
     int attackerHits = netHits.get(0);
@@ -55,24 +62,40 @@ public abstract class Action {
     return applyEffect(game, attacker, target, attackerHits, targetHits);
   }
   
-  private ArrayList<String> resolveDefense(Game game, MatrixEntity target){
-    ArrayList<String> resolvedStats = new ArrayList<>();
-    MatrixEntity defender = target;
+  private int resolveDefense(Game game, MatrixEntity target){
+    int totalDice = defenderBonus;
 
     Host host = (target instanceof Host) ? (Host) target : game.currentHost;
 
     for (StatEntry entry : defenderStats){
-      if (entry.source == StatSource.SPIDER) {
-        if (host != null && host.hasSpider()) {
-          resolvedStats.add(entry.statName);
-          defender = host.spider;
-        } else {
-          System.out.println("[INFO] HOST_NO_SPIDER: " + entry.statName + " nulled from defense pool.");
-        }
-      } else {
-        resolvedStats.add(entry.statName);
+      switch (entry.source){
+        case HOST:
+          totalDice += target.getStat(entry.statName);
+          break;
+        case SPIDER:
+          if (host != null && host.hasSpider()) {
+            totalDice += host.spider.getStat(entry.statName);
+          } else {
+            Debug.log("HOST_NO_SPIDER: " + entry.statName + " nulled from defense pool.");
+          }
+          break;
+        case FLAT:
+          totalDice += entry.flatValue;
+          break;
+        case SUBSTITUTE:
+          boolean primaryAvailable = (entry.source == StatSource.SPIDER)
+            ? (host != null && host.hasSpider())
+            : true;
+          
+          if (primaryAvailable && host != null && host.hasSpider()){
+            totalDice += host.spider.getStat(entry.statName);
+          } else {
+            int subValue = target.getStat(entry.substituteStat) * entry.flatValue;
+            totalDice += subValue;
+          }
+          break;
       }
     }
-    return resolvedStats;
+    return totalDice;
   }
 }
