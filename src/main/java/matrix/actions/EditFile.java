@@ -2,16 +2,15 @@ package matrix.actions;
 
 import game.ActionResult;
 import game.Game;
-
-import matrix.MatrixEntity;
+import java.util.Arrays;
 import matrix.AccessState;
+import matrix.MatrixEntity;
 import matrix.files.HostFile;
-
-import mission.ObjectiveType;
-
 import player.Player;
 
-import java.util.Arrays;
+
+
+
 
 public class EditFile extends Action {
 
@@ -39,6 +38,12 @@ public class EditFile extends Action {
   @Override
   public ActionResult applyEffect(Game game, MatrixEntity attacker, MatrixEntity target, int attackerHits, int targetHits) {
     // If the attacker has more hits than the target, the Action succeeds
+    Player player = (Player) attacker;
+    if (player.findOwnedProgram("Editor") != null){
+      attackerHits += 1;
+      System.out.println("[INFO] PROGRAM_USED: Editor gave you one free hit on your Edit.");
+    }
+
     int netHits = attackerHits - targetHits;
 
     HostFile targetFile = (HostFile) target;

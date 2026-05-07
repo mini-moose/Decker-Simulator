@@ -7,6 +7,9 @@ public class ProgramFactory {
     ArrayList<Program> programs = new ArrayList<>();
 
     programs.add(new Toolbox());
+    programs.add(new Editor());
+    programs.add(new Browse());
+    programs.add(new Armor());
 
     return programs;
   }

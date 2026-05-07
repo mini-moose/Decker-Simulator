@@ -2,16 +2,15 @@ package matrix.actions;
 
 import game.ActionResult;
 import game.Game;
-
-import matrix.MatrixEntity;
+import java.util.Arrays;
 import matrix.AccessState;
+import matrix.MatrixEntity;
 import matrix.files.HostFile;
-
-import mission.ObjectiveType;
-
 import player.Player;
 
-import java.util.Arrays;
+
+
+
 
 public class Crack extends Action {
 
@@ -39,6 +38,12 @@ public class Crack extends Action {
   @Override
   public ActionResult applyEffect(Game game, MatrixEntity attacker, MatrixEntity target, int attackerHits, int targetHits) {
     // If the attacker has more hits than the target, the Action succeeds
+    Player player = (Player) attacker;
+    if (player.findOwnedProgram("Decrypt") != null){
+      attackerHits += 2;
+      System.out.println("[INFO] PROGRAM_USED: Decrypt gave you two free hits on your Crack attempt.");
+    }
+
     int netHits = attackerHits - targetHits;
 
     HostFile targetFile = (HostFile) target;

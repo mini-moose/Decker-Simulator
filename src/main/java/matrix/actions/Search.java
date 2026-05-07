@@ -2,14 +2,13 @@ package matrix.actions;
 
 import game.ActionResult;
 import game.Game;
-
-import matrix.MatrixEntity;
+import java.util.Arrays;
 import matrix.AccessState;
-import matrix.Host;
-
+import matrix.MatrixEntity;
 import player.Player;
 
-import java.util.Arrays;
+
+
 
 public class Search extends Action {
 
@@ -37,11 +36,17 @@ public class Search extends Action {
   @Override
   public ActionResult applyEffect(Game game, MatrixEntity attacker, MatrixEntity target, int attackerHits, int targetHits) {
     // If the attacker has more hits than the target, the Action succeeds
+    Player player = (Player) attacker;
+    if (player.findOwnedProgram("Browse") != null){
+      attackerHits += 1;
+      System.out.println("[INFO] PROGRAM_USED: Browse gave you one free hit on your Search attempt.");
+    }
+
     int netHits = attackerHits - targetHits;
     
     if (netHits > 0) {
       // If the Action succeeds, set host.hasBackdoor = true
-      MatrixEntity defender = (MatrixEntity) target;
+      MatrixEntity defender = target;
       defender.isHidden = false;
 
       return new ActionResult(true, netHits, targetHits,
