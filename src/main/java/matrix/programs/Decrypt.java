@@ -5,10 +5,10 @@ import player.Player;
 public class Decrypt extends Program {
 
   @Override
-  public Integer getCost() { return 2500; }
+  public Integer getCost() { return 12000; }
 
   @Override
-  public String getName() { return "Editor"; }
+  public String getName() { return "Decrypt"; }
 
   @Override
   public String getDescription() { return "Increase your dice pool for Edit actions."; }

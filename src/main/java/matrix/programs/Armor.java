@@ -5,10 +5,10 @@ import player.Player;
 public class Armor extends Program {
 
   @Override
-  public Integer getCost() { return 1500; }
+  public Integer getCost() { return 9500; }
 
   @Override
-  public String getName() { return "Browse"; }
+  public String getName() { return "Armor"; }
 
   @Override
   public String getDescription() { return "Increase your Firewall stat by +2."; }
