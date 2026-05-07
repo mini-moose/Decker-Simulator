@@ -1,13 +1,12 @@
 package cli;
 
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Scanner;
-
 import game.ActionResult;
 import game.Game;
 import game.GameState;
 import game.TurnManager;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
 import main.Debug;
 import matrix.Host;
 import matrix.MatrixEntity;
@@ -30,6 +29,7 @@ import matrix.device.Device;
 import matrix.files.HostFile;
 import mission.ObjectiveType;
 import player.Player;
+
 
 public class DeckerConsole {
 
@@ -90,6 +90,9 @@ public class DeckerConsole {
           break;
         case "exit-host":
           handleExitHost(cmd);
+          break;
+        case "spoof":
+          handleSpoof(cmd);
           break;
         case "crack":
           handleCrack(cmd);
@@ -325,7 +328,6 @@ public class DeckerConsole {
       System.out.println("[ERROR] You must specify a command for the target.");
       return;
     }
-    Commands command = target.getCommand(cmd.positionalArgs.get(1));
 
     if (target == null){
       System.out.println("[ERROR] DEVICE_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a device on your current host.");
@@ -333,8 +335,27 @@ public class DeckerConsole {
       return;
     }
 
-    Spoof spoof = new Spoof();
+    Commands command = target.getCommand(cmd.positionalArgs.get(1));
 
+    if (command == null){
+      System.out.println("[ERROR] COMMAND_NOT_FOUND: " + cmd.positionalArgs.get(0) + " does not support the command: " + cmd.positionalArgs.get(1) + ".");
+      System.out.println("Use 'describe <device>' to list available commands for the device.");
+      return;
+    }
+
+    turnManager.applyEdgeEffect(player);
+
+
+    Spoof spoof = new Spoof();
+    ActionResult result = spoof.execute(game, player, target);
+
+    System.out.println(result);
+  
+    if(result.success) {
+      game.checkCommandComplete(ObjectiveType.DISABLE_DEVICE, target, command);
+    }
+
+    turnManager.onPlayerActionTaken(spoof);
   }
 
   // Search Action

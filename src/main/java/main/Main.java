@@ -1,10 +1,5 @@
 package main;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Scanner;
-
 import cli.DeckerConsole;
 import cli.OutMission;
 import data.Cyberjack;
@@ -14,12 +9,16 @@ import data.DeckFactory;
 import game.Game;
 import game.GameState;
 import game.UI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Scanner;
 import matrix.AccessState;
 import matrix.Host;
 import matrix.SecurityType;
-import matrix.programs.Toolbox;
 import mission.Mission;
 import player.Player;
+
 
 public class Main {
   public static void main(String[] args) {
@@ -63,12 +62,6 @@ public class Main {
       "########  See something suspicious on the Matrix? Ping OverWatch! Rewards of up to 50 ¥!  ########\n",
       "######  Rent due? No cash? RentDaddy's got your back! Pay today's rent, tomorrow! Or else.  ######\n"
     ));
-
-    // TESTING PROGRAMS
-    Toolbox toolbox = new Toolbox();
-    player.ownedPrograms.add(toolbox);
-
-    // END TEST
 
     Host pubNet = new Host(1, 1, SecurityType.PUBLIC, "PubNet", pubNetBanner, false, pubNetNCL);
     pubNet.accessControl.put(player, AccessState.ADMIN_LEGAL);

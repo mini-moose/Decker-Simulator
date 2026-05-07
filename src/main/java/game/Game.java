@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
-
 import main.Debug;
 import main.DiceRoller;
 import matrix.AccessState;
 import matrix.Host;
 import matrix.MatrixEntity;
 import matrix.actions.EdgeType;
+import matrix.device.Commands;
 import matrix.device.Device;
 import matrix.files.HostFile;
 import matrix.ic.IC;
@@ -21,6 +21,7 @@ import mission.MissionType;
 import mission.Objective;
 import mission.ObjectiveType;
 import player.Player;
+
 
 // Manages the game logic
 public class Game {
@@ -274,8 +275,26 @@ public class Game {
     }
   }
 
+  public void checkCommandComplete(ObjectiveType type, MatrixEntity objectiveEntity, Commands command){
+    for (Objective obj : currentMission.objectives){
+      if (!obj.isComplete && obj.type == type) {
+        if (objectiveMatchesCommand(obj, command) && objectiveMatchesEntity(obj, objectiveEntity)){
+          obj.complete();
+          break;
+        }
+      }
+    }
+    if (currentMission.isComplete()){
+      triggerMissionComplete();
+    }
+  }
+
   private boolean objectiveMatchesEntity(Objective obj, MatrixEntity entity){
     return obj.description.contains(entity.name);
+  }
+
+  private boolean objectiveMatchesCommand(Objective obj, Commands command){
+    return obj.description.contains(command.getLabel());
   }
 
   private void triggerMissionComplete() {

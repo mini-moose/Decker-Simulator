@@ -2,12 +2,12 @@ package mission;
 
 import java.util.ArrayList;
 import java.util.Random;
-
 import main.Debug;
 import matrix.Host;
 import matrix.MatrixEntity;
 import matrix.device.Device;
 import matrix.files.HostFile;
+
 
 public class ObjectiveGenerator {
   private Random random;
@@ -72,10 +72,14 @@ public class ObjectiveGenerator {
       "Gain access to Host " + targetHost.name
     ));
     for (MatrixEntity target : targets){
-      mission.addObjective(new Objective(
-        ObjectiveType.DISABLE_DEVICE,
-        "Disable " + target.name + " on " + targetHost.name
-    ));
+      if (target instanceof Device){
+        Device targetDevice = (Device) target;
+        mission.addObjective(new Objective(
+          ObjectiveType.DISABLE_DEVICE,
+          "Spoof a '" + targetDevice.getRandomCommand().getLabel() + "' command on " + targetDevice.name + " on " + targetHost.name
+        ));        
+      }
+
     }
   }
 

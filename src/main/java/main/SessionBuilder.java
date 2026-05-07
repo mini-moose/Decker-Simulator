@@ -1,10 +1,9 @@
 package main;
 
+import game.Game;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
-
-import game.Game;
 import matrix.Host;
 import matrix.SecurityType;
 import matrix.device.Device;
@@ -16,6 +15,7 @@ import mission.Mission;
 import mission.MissionType;
 import mission.Objective;
 import mission.ObjectiveGenerator;
+
 
 public class SessionBuilder {
 
@@ -138,7 +138,7 @@ public class SessionBuilder {
     }
 
     String hostName = generateHostName(targetCorp, depth, random);
-    ArrayList<String> hostBanner = generateBanner(targetCorp, random);
+    ArrayList<String> hostBanner = generateBanner(targetCorp, hostSecurityType);
 
     Host host = new Host(hostRating, hostType, hostSecurityType, hostName, hostBanner, isHidden, hostNCL);
 
@@ -273,15 +273,55 @@ public class SessionBuilder {
     }
   }
 
-  public ArrayList<String> generateBanner(String targetName, Random random) {
+  public ArrayList<String> generateBanner(String targetName, SecurityType securityType) {
     ArrayList<String> publicBanners = new ArrayList<>(Arrays.asList(
       "#######  Welcome to the " + targetName + " public host! Please follow our matrix rules.  #########\n",
-      "###" + targetName + " is Hiring! Take our 147-page aptitude test to see if you're a good fit! ####\n",
+      "### " + targetName + " is Hiring! Take our 147-page aptitude test to see if you're a good fit! ####\n",
       "###########  Please report any suspicious activity to the nearest security icon.  #############\n",
       "#########  REMEMBER, DECKER. GRID OVERWATCH IS __ALWAYS__ WATCHING. GET OUT ###########\n"
     ));
 
-    // TODO: Add more of these tomorrow
-    return publicBanners;
+    ArrayList<String> adminBanners = new ArrayList<>(Arrays.asList(
+      "#######  Welcome, user. Your access to this system is considered the start of your workday.  #########\n",
+      "#######  " + targetName + " is an equal opportunity employer. You are all equaly fireable.  ########\n",
+      "#######  Remember to report time-theft to your Supervisor. Reward is 1/2 hour pay per finding.  ########\n",
+      "#######  If you are experiencing distress in the workplace, submit form 13a-c to your shredder.  #########\n"
+    ));
+
+    ArrayList<String> securityBanners = new ArrayList<>(Arrays.asList(
+      "#######  You are accessing a " + targetName + " secure host. Access is consent to monitoring.  #########\n",
+      "#######  Accessing secure hosts without permission bears the penalty of life in prison.  ########\n",
+      "#######  Unauthorized access to this host will be subject to IC response. Deadly force authorized.  ########\n",
+      "#######  " + targetName + " is not liable for any real-world damage caused by IC actions.  #########\n"
+    ));
+
+    ArrayList<String> sensitiveBanners = new ArrayList<>(Arrays.asList(
+      "#######  Welcome, investor, stakeholder, or management person. Please access only your allowed documents.  #########\n",
+      "#######  " + targetName + " files are proprietary. Unauthorized disclosure is punishable by law.  ########\n",
+      "#######  Please refrain from renaming project files. IC response will trigger if files are mishandled.  ########\n",
+      "#######  Remember - Deckers could be anywhere. Report suspicious actions to Grid Overwatch immediately!  #########\n"
+    ));
+
+    ArrayList<String> internalBanners = new ArrayList<>(Arrays.asList(
+      "#######  Members of the " + targetName + " development team are subject to deck inspection at the end of the workday.  #########\n",
+      "#######  " + targetName + " matrix employees are eligible for retainment pay. See your supervisor for details.  ########\n",
+      "#######  The MatrixOps team would like to remind you: DON'T TOUCH THE HOST CONFIGURATIONS!!  ########\n",
+      "#######  Developers that do not submit their code at the end of the workday will be tazed by Security.  #########\n"
+    ));
+
+    switch(securityType){
+      case PUBLIC:
+        return publicBanners;
+      case SECURITY:
+        return securityBanners;
+      case ADMIN:
+        return adminBanners;
+      case SENSITIVE:
+        return sensitiveBanners;
+      case INTERNAL:
+        return internalBanners;
+      default:
+        return publicBanners;
+    }
   }
 }

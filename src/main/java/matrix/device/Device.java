@@ -2,9 +2,9 @@ package matrix.device;
 
 import java.util.ArrayList;
 import java.util.Random;
-
 import matrix.Host;
 import matrix.MatrixEntity;
+
 
 public class Device extends MatrixEntity {
 
@@ -21,5 +21,18 @@ public class Device extends MatrixEntity {
     this.firewall = host.rating;
     this.dataProcessing = host.rating;
     this.sleaze = host.rating;
+  }
+
+  public Commands getCommand(String command){
+    for (Commands c : devCommands){
+      if (command.equalsIgnoreCase(c.getLabel())) {
+        return c;
+      }
+    }
+    return null;
+  }
+
+  public Commands getRandomCommand(){
+    return devCommands.get(new Random().nextInt(devCommands.size()));
   }
 }
