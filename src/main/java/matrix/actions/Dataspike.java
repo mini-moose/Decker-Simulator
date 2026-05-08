@@ -49,10 +49,10 @@ public class Dataspike extends Action {
         game.checkObjectiveComplete(ObjectiveType.DISABLE_DEVICE, targetDevice);
       }
       return new ActionResult(true, netHits, targetHits,
-          "Dealt " +  damage + " damage to " + targetDevice.name + "'.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Dealt " +  damage + " damage to " + targetDevice.name + "'.");
     } else {
       return new ActionResult(false, netHits, targetHits,
-          "Target device: '" + targetDevice.name + "' avoided all damage.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Target device: '" + targetDevice.name + "' avoided all damage.");
     }
   }
 }

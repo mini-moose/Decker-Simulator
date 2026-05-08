@@ -1,13 +1,11 @@
 package matrix.actions;
 
+import java.util.Arrays;
+
 import game.ActionResult;
 import game.Game;
-
-import matrix.MatrixEntity;
 import matrix.AccessState;
-import matrix.Host;
-
-import java.util.Arrays;
+import matrix.MatrixEntity;
 
 public class CheckOS extends Action {
 
@@ -48,11 +46,11 @@ public class CheckOS extends Action {
             "===     W   W                ===\n", 40 - game.overWatchScore));
       } else {
         return new ActionResult(true, netHits, targetHits,
-        "[INFO] OVERWATCH_SCORE: OverWatch is not tracking your movements.");
+        "[" + attacker.name.toUpperCase() + "_TURN] OVERWATCH_SCORE: OverWatch is not tracking your movements.");
       }
     } else {
       return new ActionResult(false, netHits, 0,
-          "Denied access to endpoint overwatch." + target.name + ":9999 // ERRORCODE:TmljZSB0cnkgZGVja2VyCg==");
+          "[" + attacker.name.toUpperCase() + "_TURN] Denied access to endpoint overwatch." + target.name + ":9999 // ERRORCODE:TmljZSB0cnkgZGVja2VyCg==");
     }
   }
 }

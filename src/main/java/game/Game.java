@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
+
 import main.Debug;
 import main.DiceRoller;
 import matrix.AccessState;
@@ -39,6 +40,8 @@ public class Game {
   public Host currentHost = null;
 
   public Mission currentMission = null;
+
+  public ArrayList<String> turnLog = new ArrayList<>();
 
   public ArrayList<Host> hosts = new ArrayList<>();
 
@@ -139,6 +142,14 @@ public class Game {
     return current.supersedes(required);
   }
 
+  public void logTurn(String message) {
+    turnLog.add(message);
+  }
+
+  public void clearTurnLog(){
+    turnLog.clear();
+  }
+
   // ################################################################################
   // ##################        Dice and Rolling Methods        ######################
   // ################################################################################
@@ -190,15 +201,28 @@ public class Game {
 
     // Check to see if IC hits, if not then no further effects
     if (netHits <= 0) {
-      System.out.println("[INFO] IC_" + ic.icType + ": IC Action avoided");
+      if (ic.icType.equals(ICType.PATROL)){
+        System.out.println("[INFO] IC_" + ic.icType + " Patrol search avoided.");
+        logTurn("[HOST_TURN] The Patrol IC failed to find you.");
+      } else {
+        System.out.println("[INFO] IC_" + ic.icType + ": IC Attack avoided.");
+        logTurn("[HOST_TURN] The " + ic.icType + " IC attacked but missed you.");
+      }
       return;
     }
     
-    System.out.println("[WARNING] IC_" + ic.icType + ": IC Action succeeded with " + netHits + " Net Hits");
+    if (ic.icType.equals(ICType.PATROL)){
+      System.out.println("[WARNING] IC_" + ic.icType + ": Patrol IC successfully spotted you.");
+      logTurn("[HOST_TURN] The " + ic.icType + " IC spotted you.");
+      return;
+    }
+    
+    System.out.println("[WARNING] IC_" + ic.icType + ": IC Action succeeded with " + netHits + " Net Hits.");
+    logTurn("[HOST_TURN] The " + ic.icType + " IC hit you with an attack.");
 
     // If IC has an additional effect tied to hits, apply it here
-    if (ic instanceof ICEffect) {
-      ((ICEffect) ic).applyEffect(player, netHits);
+    if (ic instanceof ICEffect iCEffect) {
+          iCEffect.applyEffect(player, netHits);
     }
   }
 
@@ -319,25 +343,25 @@ public class Game {
   public void printMissionSummary(Game game, Player player) {
       System.out.println("\n======== MISSION DEBRIEF ========");
       switch (game.gameState) {
-        case MISSION_COMPLETE:
-          System.out.println(">> Status:  SUCCESS");
-          System.out.println(">> Payout:  " + game.currentMission.reward + "¥ transferred.");
-          System.out.println(">> Credits: " + player.credits + "¥ total.");
-          break;
-        case CONVERGENCE:
-          System.out.println(">> Status:  DUMPED");
-          System.out.println(">> OW agents are looking for you. Time to get out of town...");
-          break;
-        case PLAYER_DEAD:
-          System.out.println(">> Status:  FLATLINED");
-          System.out.println(">> Someone's going to find you in that alley.");
-          break;
-        case JACKED_OUT:
-          System.out.println(">> Status:  ABORTED");
-          System.out.println(">> No payout. Better luck next time.");
-          break;
-        default:
-          break;
+        case MISSION_COMPLETE -> {
+            System.out.println(">> Status:  SUCCESS");
+            System.out.println(">> Payout:  " + game.currentMission.reward + "¥ transferred.");
+            System.out.println(">> Credits: " + player.credits + "¥ total.");
+          }
+        case CONVERGENCE -> {
+            System.out.println(">> Status:  DUMPED");
+            System.out.println(">> OW agents are looking for you. Time to get out of town...");
+          }
+        case PLAYER_DEAD -> {
+            System.out.println(">> Status:  FLATLINED");
+            System.out.println(">> Someone's going to find you in that alley.");
+          }
+        case JACKED_OUT -> {
+            System.out.println(">> Status:  ABORTED");
+            System.out.println(">> No payout. Better luck next time.");
+          }
+        default -> {
+          }
       }
       System.out.println("=================================\n");
   }
@@ -489,6 +513,7 @@ public class Game {
     if (player.isDetected) {
       if (player.edgeType != null && player.edgeType.equals(EdgeType.SCRAMBLE)){
         System.out.println("[INFO] SCRAMBLE: Detection avoided.");
+        logTurn("[HOST_TURN] SCRAMBLE: You avoided being spotted by the Patrol IC with Scramble.");
         player.edgeType = null;
       }
       handleDetection(host, player, random);
@@ -503,6 +528,7 @@ public class Game {
     if (!player.isHidden){
       player.isDetected = true;
       System.out.println("[WARNING] Host has flagged you as a Persona of Interest.");
+      logTurn("[HOST_TURN] The Host has flagged you as a Persona of Interest. Being spotted again will put the host on Alert.");
     } else {
       ResolveICAttack(patrol, player);
     }
@@ -519,7 +545,7 @@ public class Game {
         triggerAlert(host, player);
       } else {
         System.out.println("[SYSTEM] IC Patrol accounting for system error, rerouting.");
-
+        logTurn("[HOST_TURN] The Patrol IC lost your signature.");
       }
     } else {
       triggerAlert(host, player);
@@ -531,6 +557,7 @@ public class Game {
     consecutiveDetections = 0;
     player.isDetected = true;
     System.out.println("[SYSTEM] ALERT: HOST HAS DETECTED INTRUSION, DEPLOYING IC");
+    logTurn("[HOST_TURN] The Host has detected your presence and is deploying IC.");
     deployFirstAvailableCombatIC(host);
   }
 
@@ -557,11 +584,11 @@ public class Game {
   }
 
   public Class<?> resolveEntityType(String type){
-    switch (type) {
-      case "host":    return Host.class;
-      case "file":    return HostFile.class;
-      case "device":  return Device.class;
-      default:        return null;
-    }
+      return switch (type) {
+          case "host" -> Host.class;
+          case "file" -> HostFile.class;
+          case "device" -> Device.class;
+          default -> null;
+      };
   }
 }

@@ -1,18 +1,13 @@
 package matrix.actions;
 
+import java.util.Arrays;
+
 import game.ActionResult;
 import game.Game;
-
-import matrix.Host;
 import matrix.AccessState;
+import matrix.Host;
 import matrix.MatrixEntity;
-
-import mission.ObjectiveType;
-
 import player.Player;
-
-import java.util.Arrays;
-import java.util.HashMap;
 
 
 // Brute Force
@@ -73,10 +68,10 @@ public class BruteForce extends Action {
       // Can fulfil the GAIN_ACCESS objective on success
 
       return new ActionResult(true, netHits, targetHits,
-          "Brute Force successful, (Illegal) " + requestedAccess + " access gained on '" + targetHost.name + "'.\n[WARNING] HOST ALERTED TO INTRUSION, DEPLOYING COUNTERMEASURES.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Brute Force successful, (Illegal) " + requestedAccess + " access gained on '" + targetHost.name + "'.\n[WARNING] HOST ALERTED TO INTRUSION, DEPLOYING COUNTERMEASURES.");
     } else {
       return new ActionResult(false, netHits, targetHits,
-          "Brute Force unsuccessful.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Brute Force unsuccessful.");
     }
   }
 }

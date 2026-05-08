@@ -2,9 +2,9 @@ package matrix.device;
 
 import java.util.ArrayList;
 import java.util.Random;
+
 import matrix.Host;
 import matrix.MatrixEntity;
-
 
 public class Device extends MatrixEntity {
 

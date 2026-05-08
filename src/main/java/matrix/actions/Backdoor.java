@@ -1,17 +1,12 @@
 package matrix.actions;
 
+import java.util.Arrays;
+
 import game.ActionResult;
 import game.Game;
-
-import matrix.MatrixEntity;
 import matrix.AccessState;
 import matrix.Host;
-
-import mission.ObjectiveType;
-
-import player.Player;
-
-import java.util.Arrays;
+import matrix.MatrixEntity;
 
 public class Backdoor extends Action {
 
@@ -51,15 +46,12 @@ public class Backdoor extends Action {
     if (netHits > 0) {
       targetHost.accessControl.put(attacker, AccessState.ADMIN_LEGAL);
 
-      // Can fulfil the GAIN_ACCESS objective on success
-      game.checkObjectiveComplete(ObjectiveType.GAIN_ACCESS, targetHost);
-
       return new ActionResult(true, netHits, targetHits,
-          "Backdoor exploited. You now have (Legal) Admin privileges on Host '" + targetHost.name + "'.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Backdoor exploited. You now have (Legal) Admin privileges on Host '" + targetHost.name + "'.");
     } else {
       targetHost.hasBackdoor = false;
       return new ActionResult(false, netHits, targetHits,
-          "Backdoor exploitation failed. Backdoor was discovered and removed from '" + targetHost.name + "'.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Backdoor exploitation failed. Backdoor was discovered and removed from '" + targetHost.name + "'.");
     }
   }
 }

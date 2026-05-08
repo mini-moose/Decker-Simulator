@@ -1,8 +1,9 @@
 package matrix.actions;
 
+import java.util.Arrays;
+
 import game.ActionResult;
 import game.Game;
-import java.util.Arrays;
 import matrix.AccessState;
 import matrix.MatrixEntity;
 import matrix.device.Device;
@@ -40,10 +41,10 @@ public class Spoof extends Action {
 
     if (netHits > 0) {
       return new ActionResult(true, netHits, targetHits,
-          "Device: " + targetDevice.name + " recieved command.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Device: " + targetDevice.name + " recieved command.");
     } else {
       return new ActionResult(false, netHits, targetHits,
-          "Target device: '" + targetDevice.name + "' avoided all damage.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Target device: '" + targetDevice.name + "' refused to process your command.");
     }
   } 
 }

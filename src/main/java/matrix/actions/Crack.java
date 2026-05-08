@@ -1,8 +1,9 @@
 package matrix.actions;
 
+import java.util.Arrays;
+
 import game.ActionResult;
 import game.Game;
-import java.util.Arrays;
 import matrix.AccessState;
 import matrix.MatrixEntity;
 import matrix.files.HostFile;
@@ -51,10 +52,10 @@ public class Crack extends Action {
     if (netHits > 0) {
       targetFile.isEncrypted = false;
       return new ActionResult(true, netHits, targetHits,
-          "Successfully decrypted " + targetFile.name + "'.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Successfully decrypted " + targetFile.name + "'.");
     } else {
       return new ActionResult(false, netHits, targetHits,
-          "Decrypt attempt on'" + targetFile.name + "' failed.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Decrypt attempt on'" + targetFile.name + "' failed.");
     }
   }
 }

@@ -2,14 +2,8 @@ package matrix.actions;
 
 import game.ActionResult;
 import game.Game;
-
-import matrix.MatrixEntity;
 import matrix.AccessState;
-import matrix.Host;
-
-import player.Player;
-
-import java.util.Arrays;
+import matrix.MatrixEntity;
 
 public class RunSilent extends Action {
 
@@ -35,6 +29,6 @@ public class RunSilent extends Action {
     attacker.isHidden = true;
 
       return new ActionResult(true, 0, 0,
-          "You are now running silent.");
+          "[" + attacker.name.toUpperCase() + "_TURN] You are now running silent.");
   }
 }

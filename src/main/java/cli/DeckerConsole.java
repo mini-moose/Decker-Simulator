@@ -1,15 +1,18 @@
 package cli;
 
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
+
 import game.ActionResult;
 import game.Game;
 import game.GameState;
 import game.TurnManager;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Scanner;
+import game.UI;
 import main.Debug;
 import matrix.Host;
 import matrix.MatrixEntity;
+import matrix.actions.Action;
 import matrix.actions.Backdoor;
 import matrix.actions.BruteForce;
 import matrix.actions.CheckOS;
@@ -36,6 +39,9 @@ public class DeckerConsole {
   private Game game;
   private Player player;
   private TurnManager turnManager;
+  private ConsoleHeader header;
+
+  private UI ui;
 
   private Scanner console = new Scanner(System.in);
   private Random random = new Random();
@@ -45,10 +51,14 @@ public class DeckerConsole {
   public DeckerConsole(Game game, Player player){
     this.game = game;
     this.player = player;
+    this.header = new ConsoleHeader(game, player, turnManager);
     this.turnManager = new TurnManager(game, player);
+    this.ui = new UI();
   }
 
   public void start(){
+    ui.Clear();
+    header.print();
     printBanner();
     while (game.isActive()) {
 
@@ -58,24 +68,41 @@ public class DeckerConsole {
 
       if (input.isEmpty()) continue;
 
+      game.clearTurnLog();
+
       String[] parts = input.split(" ");
       CommandParser cmd = CommandParser.parse(parts);
 
-      consoleHandler(cmd);
+      turnManager.applyEdgeEffect(player);
+
+      Action lastAction = consoleHandler(cmd);
+
+      ui.Loading(5);
+
+      if (game.isActive()){
+        turnManager.onPlayerActionTaken(lastAction);
+      }
+
+      if (game.isActive()){
+        ui.Clear();
+        header.print();
+      }
     }
   }
 
-  public void consoleHandler(CommandParser cmd){
+  public Action consoleHandler(CommandParser cmd){
+    Action lastAction;
+
       switch (cmd.command) {
         case "probe":
-          handleProbe(cmd);
-          break;
+          lastAction = handleProbe(cmd);
+          return lastAction;
         case "checkos":
           handleCheckOS(cmd);
           break;
         case "backdoor":
-          handleBackdoor(cmd);
-          break;
+          lastAction = handleBackdoor(cmd);
+          return lastAction;
         case "bruteforce":
           handleBruteForce(cmd);
           break;
@@ -130,16 +157,17 @@ public class DeckerConsole {
         case "exit":
           System.out.println("Jacking out...");
           game.gameState = GameState.JACKED_OUT;
-          return;
+          return null;
         default:
           System.out.println("Unknown command: " + cmd.command + ". Type 'help' for options.");
       }
+    return null;
   }
 
   // Attempt to establish a backdoor exploit on the target system
   // Success: A backdoor exploit is established and can use the backdoor action
   // Failure: Backdoor exploit not established
-  private void handleProbe(CommandParser cmd){
+  private Action handleProbe(CommandParser cmd){
     // Usage: probe <hostname or host UP>
     if (cmd.hasOption("help") || cmd.hasOption("h") || cmd.positionalArgs.isEmpty()){
       System.out.println("Probe a host for vulnerabilities.");
@@ -149,7 +177,7 @@ public class DeckerConsole {
       System.out.println("Usage: probe <target>");
       System.out.println("Example: probe UnirealCorp-DMZ-01");
       System.out.println("Example: probe UnirealCorp-DMZ-01 -r 3");
-      return;
+      return null;
     }
 
     Host target = game.findHost(cmd.positionalArgs.get(0));
@@ -157,30 +185,31 @@ public class DeckerConsole {
     if (target == null){
       System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a host on your network.");
       System.out.println("Use 'hosts' to list available hosts.");
-      return;
+      return null;
     }
-    turnManager.applyEdgeEffect(player);
 
     int attempts = cmd.getIntOption("r", cmd.getIntOption("repeat", 1));
+    
+    Probe probe = new Probe();
 
     for (int i=0; i < attempts; i++){
       if (attempts > 1) System.out.println("Attempt " + (i + 1) + " of " + attempts);
 
-      Probe probe = new Probe();
       ActionResult result = probe.execute(game, player, target);
       System.out.println(result);
-      turnManager.onPlayerActionTaken(probe);
-
+      
       lastActionSucceed = result.success;
+      game.logTurn(result.message);
 
       if (result.success) { break; }
     }
+    return probe;
   }
 
   // Exploit a backdoor set by Probe action
   // Success: Gives attacker Legal Admin access
   // Failure: Defender finds and removes backdoor
-  private void handleBackdoor(CommandParser cmd){
+  private Action handleBackdoor(CommandParser cmd){
     if (cmd.hasOption("help") || cmd.hasOption("h") || cmd.positionalArgs.isEmpty()){
       System.out.println("Leverage a Backdoor on the target system.");
       System.out.println("Notes: Major Action, Illegal");
@@ -189,7 +218,7 @@ public class DeckerConsole {
       System.out.println("Usage: backdoor <target>");
       System.out.println("Example: backdoor UnirealCorp-DMZ-01");
       System.out.println("Example: backdoor UnirealCorp-DMZ-01 -r 3");
-      return;
+      return null;
     }
 
     Host target = game.findHost(cmd.positionalArgs.get(0));
@@ -198,40 +227,40 @@ public class DeckerConsole {
     if (target == null){
       System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a host on your network.");
       System.out.println("Use 'hosts' to list available hosts.");
-      return;
+      return null;
     }
 
     if (!target.hasBackdoor){
       System.out.println("[ERROR] HOST_NO_EXPLOIT: " + cmd.positionalArgs.get(0) + " does not have an established backdoor. Did you forget to Probe first?");
-      return;
+      return null;
     }
-    turnManager.applyEdgeEffect(player);
 
     int attempts = cmd.getIntOption("r", cmd.getIntOption("repeat", 1));
+
+    Backdoor backdoor = new Backdoor();
 
     for (int i=0; i < attempts; i++){
       if (attempts > 1) System.out.println("Attempt " + (i + 1) + " of " + attempts);
 
-      Backdoor backdoor = new Backdoor();
       ActionResult result = backdoor.execute(game, player, target);
       System.out.println(result);
 
-      turnManager.onPlayerActionTaken(backdoor);
-
       lastActionSucceed = result.success;
+      game.logTurn(result.message);
 
       if (result.success) break;
     }
+    return backdoor;
   }
 
 
   // Checks your current Overwatch Score
   // Success: You find your Overwatch Score
   // Failure: You are unable to find your Overwatch Score
-  private void handleCheckOS(CommandParser cmd){
+  private Action handleCheckOS(CommandParser cmd){
     if (cmd.hasOption("help") || cmd.hasOption("h")){
       System.out.println("ERROR [HOST_NOT_FOUND]: You are not currently connected to a host");
-      return;
+      return null;
     }
     turnManager.applyEdgeEffect(player);
 
@@ -239,10 +268,10 @@ public class DeckerConsole {
     ActionResult result = checkOS.execute(game, player, game.currentHost);
     System.out.println(result);
 
-    turnManager.onPlayerActionTaken(checkOS);
+    return checkOS;
   }
 
-  private void handleBruteForce(CommandParser cmd){
+  private Action handleBruteForce(CommandParser cmd){
     // Usage: probe <hostname or host UP>
     if (cmd.hasOption("help") || cmd.hasOption("h") || cmd.positionalArgs.isEmpty()){
       System.out.println("Brute Force your way into a system. Will alert the target.");
@@ -253,7 +282,7 @@ public class DeckerConsole {
       System.out.println("Usage: bruteforce <target>");
       System.out.println("Example: bruteforce UnirealCorp-DMZ-01 --access admin");
       System.out.println("Example: bruteforce UnirealCorp-DMZ-01 --access user -r 3 ");
-      return;
+      return null;
     }
 
     Host target = game.findHost(cmd.positionalArgs.get(0));
@@ -262,37 +291,37 @@ public class DeckerConsole {
     if (target == null){
       System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a host on your network.");
       System.out.println("Use 'hosts' to list available hosts.");
-      return;
+      return null;
     }
 
     int attempts = cmd.getIntOption("r", cmd.getIntOption("repeat", 1));
 
     String access = cmd.getOption("access", cmd.getOption("a", "user"));
-    turnManager.applyEdgeEffect(player);
+
+    BruteForce bruteforce = new BruteForce(access);
 
     for (int i=0; i < attempts; i++){
       if (attempts > 1) System.out.println("Attempt " + (i + 1) + " of " + attempts);
 
-      BruteForce bruteforce = new BruteForce(access);
       ActionResult result = bruteforce.execute(game, player, target);
       System.out.println(result);
 
-      turnManager.onPlayerActionTaken(bruteforce);
-
       lastActionSucceed = result.success;
+      game.logTurn(result.message);
 
       if (result.success) break;
     }
+    return bruteforce;
   }
 
-  private void handleDataSpike(CommandParser cmd){
+  private Action handleDataSpike(CommandParser cmd){
     if (cmd.hasOption("help") || cmd.hasOption("h") || cmd.positionalArgs.isEmpty()){
       System.out.println("Send a large set of harmful instructions to a target Device.");
       System.out.println("Notes: Major Action, Illegal");
       System.out.println("Options:");
       System.out.println("Usage: dataspike <target>");
       System.out.println("Example: bruteforce camera_42");
-      return;
+      return null;
     }
 
     Device target = game.currentHost.findDevice(cmd.positionalArgs.get(0));
@@ -300,39 +329,39 @@ public class DeckerConsole {
     if (target == null){
       System.out.println("[ERROR] DEVICE_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a device on your current host.");
       System.out.println("Use 'devs' to list available devices on the host.");
-      return;
+      return null;
     }
 
     Dataspike dataspike = new Dataspike();
     ActionResult result = dataspike.execute(game, player, target);
     System.out.println(result);
 
-    turnManager.onPlayerActionTaken(dataspike);
+    game.logTurn(result.message);
 
-    lastActionSucceed = result.success;
+    return dataspike;
   }
 
-  private void handleSpoof(CommandParser cmd){
+  private Action handleSpoof(CommandParser cmd){
     if (cmd.hasOption("help") || cmd.hasOption("h") || cmd.positionalArgs.isEmpty()){
       System.out.println("Send a command to a target Device that it will attempt to execute.");
       System.out.println("Notes: Major Action, Illegal");
       System.out.println("Options:");
       System.out.println("Usage: dataspike <target>");
       System.out.println("Example: bruteforce camera_42");
-      return;
+      return null;
     }
 
     Device target = game.currentHost.findDevice(cmd.positionalArgs.get(0));
 
     if (cmd.positionalArgs.get(1).isEmpty()){
       System.out.println("[ERROR] You must specify a command for the target.");
-      return;
+      return null;
     }
 
     if (target == null){
       System.out.println("[ERROR] DEVICE_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a device on your current host.");
       System.out.println("Use 'devs' to list available devices on the host.");
-      return;
+      return null;
     }
 
     Commands command = target.getCommand(cmd.positionalArgs.get(1));
@@ -340,22 +369,20 @@ public class DeckerConsole {
     if (command == null){
       System.out.println("[ERROR] COMMAND_NOT_FOUND: " + cmd.positionalArgs.get(0) + " does not support the command: " + cmd.positionalArgs.get(1) + ".");
       System.out.println("Use 'describe <device>' to list available commands for the device.");
-      return;
+      return null;
     }
-
-    turnManager.applyEdgeEffect(player);
-
 
     Spoof spoof = new Spoof();
     ActionResult result = spoof.execute(game, player, target);
 
     System.out.println(result);
-  
+    game.logTurn(result.message);
+
     if(result.success) {
       game.checkCommandComplete(ObjectiveType.DISABLE_DEVICE, target, command);
     }
 
-    turnManager.onPlayerActionTaken(spoof);
+    return spoof;
   }
 
   // Search Action
@@ -363,14 +390,14 @@ public class DeckerConsole {
   // Search for a hidden system on or connected to your current Host
   // Success: You discover the system you were looking for
   // Failure: You do not discover the system you were looking for
-  private void handleSearch(CommandParser cmd){
+  private Action handleSearch(CommandParser cmd){
     if (cmd.hasOption("help") || cmd.hasOption("h") || cmd.positionalArgs.isEmpty()) {
       System.out.println("Search your current Host for Programs that are in Run Silent mode.");
       System.out.println("Notes: Major Action, Legal");
       System.out.println("Usage: search <entity_type>");
       System.out.println("Example: search Host");
       System.out.println("Example: search File");
-      return;
+      return null;
     }
 
     String entityType = cmd.positionalArgs.get(0);
@@ -379,28 +406,27 @@ public class DeckerConsole {
     if (targetClass == null){
       System.out.println("[ERROR] ENTITY_UNKNOWN_TYPE: The Matrix Entity type '" + entityType + "' is unknown.");
       System.out.println("Valid types: host, device, file, ic, agent");
-      return;
+      return null;
     }
 
     ArrayList<MatrixEntity> targets = game.findHiddenEntities(targetClass);
 
     if (targets.isEmpty()) {
       System.out.println("[INFO] ENTITY_NO_SIGNATURES: There are no Matrix signatures on this host for hidden " + entityType + " entities.");
-      return;
+      return null;
     }
 
     System.out.println("[INFO] ENTITY_DETECT_SIGNATURES: Matrix Scan detected " + targets.size() + " hidden " + entityType + " on this host.");
 
-    turnManager.applyEdgeEffect(player);
 
     Search search = new Search();
     for (MatrixEntity target : targets) {
       ActionResult result = search.execute(game, player, target);
-      lastActionSucceed = result.success;
+      game.logTurn(result.message);
       System.out.println(result);
     }
-
-    turnManager.onPlayerActionTaken(search);
+    
+    return search;
   }
 
   private void handleDescribe(CommandParser cmd){
@@ -466,18 +492,16 @@ public class DeckerConsole {
         System.out.println(command.toString());
       }
     }
-
-
   }
 
-  private void handleCrack(CommandParser cmd){
+  private Action handleCrack(CommandParser cmd){
     if (cmd.hasOption("help") || cmd.hasOption("h") || cmd.positionalArgs.isEmpty()){
       System.out.println("Decrypt a File on a host. You must do this before editing an encrypted File.");
       System.out.println("Notes: Major Action, Illegal");
       System.out.println("Options:");
       System.out.println("Usage: crack <target>");
       System.out.println("Example: crack PayData");
-      return;
+      return null;
     }
     String targetName = cmd.positionalArgs.get(0);
 
@@ -487,12 +511,12 @@ public class DeckerConsole {
     if (target == null){
       System.out.println("[ERROR] FILE_NOT_FOUND: " + targetName + " is not on your current Host.");
       System.out.println("Use 'ls' to list available files.");
-      return;
+      return null;
     }
 
     if (!target.isEncrypted){
       System.out.println("[ERROR] FILE_NOT_ENCRYPTED: " + targetName + " is not Encrypted.");
-      return;
+      return null;
     }
 
     turnManager.applyEdgeEffect(player);
@@ -500,13 +524,13 @@ public class DeckerConsole {
     Crack decrypt = new Crack();
     ActionResult result = decrypt.execute(game, player, target);
 
-    lastActionSucceed = result.success;
+    game.logTurn(result.message);
     System.out.println(result);
 
-    turnManager.onPlayerActionTaken(decrypt);
+    return decrypt;
   }
 
-  private void handleEditFile(CommandParser cmd){
+  private Action handleEditFile(CommandParser cmd){
     if (cmd.hasOption("help") || cmd.hasOption("h") || cmd.positionalArgs.isEmpty()){
       System.out.println("Edit a File on a host. You can change, copy, or delete the target File.");
       System.out.println("Notes: Major Action, Legal");
@@ -517,7 +541,7 @@ public class DeckerConsole {
       System.out.println("Usage: edit <target>");
       System.out.println("Example: edit PayData -c");
       System.out.println("Example: edit PayData -e 'Decker_name was here.'");
-      return;
+      return null;
     }
     String targetName = cmd.positionalArgs.get(0);
 
@@ -527,18 +551,18 @@ public class DeckerConsole {
     if (target == null){
       System.out.println("[ERROR] FILE_NOT_FOUND: " + targetName + " is not on your current Host.");
       System.out.println("Use 'ls' to list available files.");
-      return;
+      return null;
     }
 
     if (target.isEncrypted){
       System.out.println("[ERROR] FILE_ENCRYPTED: " + targetName + " is currently Encrypted.");
-      return;
+      return null;
     }
-
-    turnManager.applyEdgeEffect(player);
 
     EditFile editFile = new EditFile();
     ActionResult result = editFile.execute(game, player, target);
+
+    game.logTurn(result.message);
     System.out.println(result);
 
     if (result.success){
@@ -546,37 +570,34 @@ public class DeckerConsole {
         String newContents = cmd.getOption("e", cmd.getOption("edit", null));
         if (newContents == null) {
           System.out.println("[ERROR] No new contents was defined");
-          return;
+          return editFile;
         }
         target.contents = newContents;
         game.checkObjectiveComplete(ObjectiveType.TAMPER_FILE, target); // Completes objective Tamper File
         System.out.println("[INFO] FILE_EDITED: Contents of '" + target.name + "' now reads: '" + target.contents + "'.");
-        return;
+        return editFile;
       } else if (cmd.hasOption("d") || cmd.hasOption("delete")){
         game.currentHost.filesOnHost.remove(target);
         game.checkObjectiveComplete(ObjectiveType.DELETE_FILE, target); // Completes objective Delete File
         System.out.println("[INFO] FILE_DELETED: '" + target.name + "' has been deleted.");
-        return;
+        return editFile;
       } else if (cmd.hasOption("c") || cmd.hasOption("copy")){
         game.checkObjectiveComplete(ObjectiveType.EXFIL_FILE, target); // Completes objective Delete File
         System.out.println("[INFO] FILE_COPIED: '" + target.name + "' has been copied to your Deck.");
-        return;
+        return editFile;
       } 
     }
-
-    lastActionSucceed = result.success;
-
-    turnManager.onPlayerActionTaken(editFile);
+    return null;
   }
 
-  private void handleEnterHost(CommandParser cmd){
+  private Action handleEnterHost(CommandParser cmd){
     if (cmd.hasOption("help") || cmd.hasOption("h") || cmd.positionalArgs.isEmpty()){
       System.out.println("Enter a Host you have access to");
       System.out.println("Notes: Simple Action, Legal");
       System.out.println("Usage: enter-host <target>");
       System.out.println("Example: enter-host UnirealCorp-DMZ-01");
       System.out.println("Example: enter-host UnirealCorp-DMZ-01 -r 3");
-      return;
+      return null;
     }
 
     Host target = game.findHost(cmd.positionalArgs.get(0));
@@ -584,16 +605,19 @@ public class DeckerConsole {
     if (target == null){
       System.out.println("[ERROR] HOST_NOT_FOUND: " + cmd.positionalArgs.get(0) + " is not a host on your network.");
       System.out.println("Use 'hosts' to list available hosts.");
-      return;
+      return null;
     }
 
     EnterHost enterHost = new EnterHost();
     ActionResult result = enterHost.execute(game, player, target);
+
+    game.logTurn(result.message);
     System.out.println(result);
-    turnManager.onPlayerActionTaken(enterHost);
+
+    return enterHost;
   }
 
-  private void handleExitHost(CommandParser cmd){
+  private Action handleExitHost(CommandParser cmd){
     if (cmd.hasOption("help") || cmd.hasOption("h")){
       System.out.println("Exit from your current host to your previous host");
       System.out.println("Notes: Simple Action, Legal");
@@ -602,7 +626,7 @@ public class DeckerConsole {
       System.out.println("    -d --default  Exit to your default Home host (Usually PubNet)");
       System.out.println("Example: exit-host");
       System.out.println("Example: exit-host --default");
-      return;
+      return null;
     }
 
     ExitHost exitHost = new ExitHost();
@@ -611,28 +635,29 @@ public class DeckerConsole {
     if (cmd.hasOption("default") || cmd.hasOption("d")) {
       if (game.defaultHost == null) {
         System.out.println("[ERROR] NO_DEFAULT_HOST: No default host is set.");
-        return;
+        return null;
       }
       result = exitHost.execute(game, player, game.defaultHost);
     } else {
       if (game.parentHost == null) {
         System.out.println("[ERROR] NO_PREVIOUS_HOST: No parent host to return to.");
-        return;
+        return null;
       }
       result = exitHost.execute(game, player, game.parentHost);
     }
 
+    game.logTurn(result.message);
     System.out.println(result);
-
-    turnManager.onPlayerActionTaken(exitHost);
+    
+    return exitHost;
   }
 
-  private void handleRunSilent(CommandParser cmd){
+  private Action handleRunSilent(CommandParser cmd){
     if (cmd.hasOption("help") || cmd.hasOption("h")){
       System.out.println("Configure to run silent. Hides you from passive detection, but ICs might still search for you.");
       System.out.println("Notes: Major Action, Legal");
       System.out.println("Usage: run-silent");
-      return;
+      return null;
     }
 
     RunSilent runSilent = new RunSilent();
@@ -640,9 +665,10 @@ public class DeckerConsole {
 
     result = runSilent.execute(game, player, game.currentHost);
 
+    game.logTurn(result.message);
     System.out.println(result);
-
-    turnManager.onPlayerActionTaken(runSilent);
+    
+    return runSilent;
   }
 
   private void handleHosts() {
@@ -691,7 +717,7 @@ public class DeckerConsole {
     System.out.println("==============================");
   }
 
-  private void handleEdge(CommandParser cmd){
+  private Action handleEdge(CommandParser cmd){
     if (cmd.positionalArgs.get(0).equals("help") || cmd.positionalArgs.get(0).equals("h") || cmd.positionalArgs.isEmpty()){
       System.out.println("Give yourself an Edge to help you perform difficult actions.");
       System.out.println("Notes: Simple Action, Legal");
@@ -702,7 +728,7 @@ public class DeckerConsole {
       System.out.println("    scramble   Increase your Overwatch score. The next time a Patrol would spot you, stay hidden.");
       System.out.println("Example: edge overclock");
       System.out.println("Example: edge scramble");
-      return;
+      return null;
     }
 
     String edgeTypeInput = cmd.positionalArgs.get(0);
@@ -710,28 +736,30 @@ public class DeckerConsole {
     ActionResult result;
 
     switch(edgeTypeInput){
-      case("overclock"):
-        edge = new Edge(EdgeType.OVERCLOCK);
-        result = edge.execute(game, player, game.currentHost);
-
-        System.out.println(result);
-        break;
-      case("shield"):
-        edge = new Edge(EdgeType.SHIELD);
-        result = edge.execute(game, player, game.currentHost);
-
-        System.out.println(result);
-        break;
-      case("scramble"):
-        edge = new Edge(EdgeType.SCRAMBLE);
-        result = edge.execute(game, player, game.currentHost);
-
-        System.out.println(result);
-        break;
-      default:
-        System.out.println("[ERROR] INVALID_OPTION: " + edgeTypeInput + " is not a valid option.");
-        break;
+      case("overclock") -> {
+          edge = new Edge(EdgeType.OVERCLOCK);
+          result = edge.execute(game, player, game.currentHost);
+          game.logTurn(result.message);
+          System.out.println(result);
+          return edge;
+          }
+      case("shield") -> {
+          edge = new Edge(EdgeType.SHIELD);
+          result = edge.execute(game, player, game.currentHost);
+          game.logTurn(result.message);
+          System.out.println(result);
+          return edge;
+          }
+      case("scramble") -> {
+          edge = new Edge(EdgeType.SCRAMBLE);
+          result = edge.execute(game, player, game.currentHost);
+          game.logTurn(result.message);
+          System.out.println(result);
+          return edge;
+          }
+      default -> System.out.println("[ERROR] INVALID_OPTION: " + edgeTypeInput + " is not a valid option.");
     }
+    return null;
   }
 
   private void handleObjectives(){

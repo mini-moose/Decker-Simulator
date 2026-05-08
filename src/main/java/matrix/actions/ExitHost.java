@@ -2,12 +2,9 @@ package matrix.actions;
 
 import game.ActionResult;
 import game.Game;
-
-import player.Player;
-
-import matrix.MatrixEntity;
 import matrix.AccessState;
 import matrix.Host;
+import matrix.MatrixEntity;
 
 // Enter Host
 // Broken out actions between Exit Host and Enter Host
@@ -40,7 +37,7 @@ public class ExitHost extends Action {
     game.parentHost = null;
 
     return new ActionResult(true, 0, 0,
-      "[INFO] HOST_STATE: Exited to Host " + defender.name + ".");
+      "[" + attacker.name.toUpperCase() + "_TURN] HOST_STATE: Exited to Host " + defender.name + ".");
   }
 
 }

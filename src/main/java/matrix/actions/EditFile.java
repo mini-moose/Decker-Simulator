@@ -1,8 +1,9 @@
 package matrix.actions;
 
+import java.util.Arrays;
+
 import game.ActionResult;
 import game.Game;
-import java.util.Arrays;
 import matrix.AccessState;
 import matrix.MatrixEntity;
 import matrix.files.HostFile;
@@ -50,10 +51,10 @@ public class EditFile extends Action {
 
     if (netHits > 0) {
       return new ActionResult(true, netHits, targetHits,
-          "Successfully edited " + targetFile.name + "'.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Successfully edited " + targetFile.name + "'.");
     } else {
       return new ActionResult(false, netHits, targetHits,
-          "Edit attempt on'" + targetFile.name + "' failed.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Edit attempt on'" + targetFile.name + "' failed.");
     }
   }
 }

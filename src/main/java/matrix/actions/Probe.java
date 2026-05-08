@@ -1,15 +1,12 @@
 package matrix.actions;
 
+import java.util.Arrays;
+
 import game.ActionResult;
 import game.Game;
-
-import matrix.MatrixEntity;
 import matrix.AccessState;
 import matrix.Host;
-
-import player.Player;
-
-import java.util.Arrays;
+import matrix.MatrixEntity;
 
 public class Probe extends Action {
 
@@ -45,10 +42,10 @@ public class Probe extends Action {
       targetHost.hasBackdoor = true;
 
       return new ActionResult(true, netHits, targetHits,
-          "Vulnerability found. Backdoor established.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Vulnerability found in " + target.name + ". Backdoor established.");
     } else {
       return new ActionResult(false, netHits, targetHits,
-          "Probe failed. No vulnerability found.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Probe failed on " + target.name + ". No vulnerability found.");
     }
   }
 }

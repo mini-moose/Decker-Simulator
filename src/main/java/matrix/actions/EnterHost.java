@@ -40,7 +40,7 @@ public class EnterHost extends Action {
     game.checkObjectiveComplete(ObjectiveType.GAIN_ACCESS, targetHost);
 
     return new ActionResult(true, 0, 0,
-      "[INFO] HOST_STATE: Entered Host " + targetHost.name + ".");
+      "[" + attacker.name.toUpperCase() + "_TURN] HOST_STATE: Entered Host " + targetHost.name + ".");
   }
 
 }

@@ -36,7 +36,7 @@ public class Edge extends Action {
     player.edgeType = edgeType;
 
     return new ActionResult(true, 0, 0,
-      "[INFO] EDGE_GAINED: Deck reconfigured to mode:  " + edgeType.toString() + ".");
+      "[" + attacker.name.toUpperCase() + "_TURN] EDGE_GAINED: Deck reconfigured to mode:  " + edgeType.toString() + ".");
   }
 
 }

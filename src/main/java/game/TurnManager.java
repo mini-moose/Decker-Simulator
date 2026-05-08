@@ -66,6 +66,10 @@ public class TurnManager {
     // If the mission is complete, return
     if (game.currentMission.isComplete()) return;
 
+    if (action == null){
+      return;
+    }
+
     // Move turn forward differently for each action
     if (action.getType().equals("Extended")) {
       previousTurn = currentTurn;

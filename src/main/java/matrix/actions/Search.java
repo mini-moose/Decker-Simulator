@@ -1,8 +1,9 @@
 package matrix.actions;
 
+import java.util.Arrays;
+
 import game.ActionResult;
 import game.Game;
-import java.util.Arrays;
 import matrix.AccessState;
 import matrix.MatrixEntity;
 import player.Player;
@@ -50,10 +51,10 @@ public class Search extends Action {
       defender.isHidden = false;
 
       return new ActionResult(true, netHits, targetHits,
-          "Discovered hidden: " + target.name);
+          "[" + attacker.name.toUpperCase() + "_TURN] Discovered hidden: " + target.name);
     } else {
       return new ActionResult(false, netHits, targetHits,
-          "Search found no hidden Matrix Entities.");
+          "[" + attacker.name.toUpperCase() + "_TURN] Search found no hidden Matrix Entities.");
     }
   }
 }
